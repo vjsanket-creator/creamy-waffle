@@ -125,24 +125,21 @@
       gap: 2px;
     }
 
-    .auth-brand-emblem-container {
-      position: relative;
-      cursor: pointer;
-    }
-
     .auth-brand-emblem {
-      width: 150px;
-      height: 140px;
-      object-fit: contain;
-      background: transparent;
+      width: 140px;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid #fed7aa;
+      background: #ffffff;
       display: block;
-      mix-blend-mode: multiply;
-      filter: drop-shadow(0 8px 18px rgba(234, 88, 12, 0.15));
+      box-shadow: 0 8px 18px rgba(234, 88, 12, 0.2);
+      margin: 0 auto 6px;
     }
 
     .auth-logo-title {
       font-family: 'Pacifico', cursive;
-      font-size: 22px;
+      font-size: 24px;
       color: var(--primary-orange);
       filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
       line-height: 1.1;
@@ -307,31 +304,15 @@
       position: relative;
     }
 
-    .profile-avatar-container {
-      position: relative;
-      cursor: pointer;
-    }
-
     .profile-avatar {
       width: 44px;
       height: 44px;
-      border-radius: 10px;
+      border-radius: 12px;
       background: #ffffff;
       object-fit: cover;
       display: block;
-      border: 1px solid #fed7aa;
-    }
-
-    .profile-avatar-container::after {
-      content: '📷';
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      font-size: 9px;
-      background: #ffffff;
-      border-radius: 50%;
-      padding: 2px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      border: 2px solid var(--primary-orange);
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
     }
 
     .btn-icon {
@@ -1635,9 +1616,7 @@
   <!-- AUTHENTICATION OVERLAY -->
   <div class="auth-page-overlay" id="authOverlay">
     <div class="auth-logo-box">
-      <div class="auth-brand-emblem-container" onclick="triggerProfileUpload()" title="Click to Upload Logo">
-        <img id="authLogoImg" src="" class="auth-brand-emblem" alt="Creamy Waffle Logo">
-      </div>
+      <img id="authLogoImg" src="Creamy Waffle Logo_HighRes.jpg" class="auth-brand-emblem" alt="Creamy Waffle Logo">
       <div class="auth-logo-title">Creamy Waffle</div>
       <div class="auth-subtitle" id="authFormSubtitle">Login to your account</div>
     </div>
@@ -1746,10 +1725,7 @@
         </div>
         <div class="btn-icon" onclick="logoutUser()" title="Logout">🚪</div>
 
-        <div class="profile-avatar-container" id="profileAvatarBox" onclick="triggerProfileUpload()" title="Change Logo">
-          <img id="profileImg" src="" class="profile-avatar" alt="Shop Logo">
-          <input type="file" id="profileFileInput" accept="image/*" style="display:none;" onchange="updateProfilePhoto(event)">
-        </div>
+        <img id="profileImg" src="Creamy Waffle Logo_HighRes.jpg" class="profile-avatar" alt="Shop Logo">
       </div>
     </div>
 
@@ -2020,14 +1996,9 @@
       <div id="onlinePaymentDetailsBox" style="background:#ffedd5; border:1px solid #fed7aa; border-radius:14px; padding:12px; text-align:center; margin-bottom:16px;">
         <div style="font-size:12px; font-weight:800; color:#7c2d12; margin-bottom:6px;">Scan & Pay via GPay / Paytm / PhonePe</div>
         
-        <div style="background:white; width:130px; height:130px; margin:0 auto 6px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #fed7aa; padding:4px; position:relative; cursor:pointer;" onclick="triggerQrUpload()" title="Click to Upload Custom QR Code">
+        <div style="background:white; width:130px; height:130px; margin:0 auto 6px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #fed7aa; padding:4px; position:relative;">
           <img id="paymentQrImg" alt="QR Code" style="width:100%; height:100%; object-fit:contain;">
-          <div id="qrUploadHint" style="position:absolute; bottom:2px; font-size:9px; background:rgba(0,0,0,0.6); color:white; padding:1px 4px; border-radius:4px; display:none;">Change QR</div>
         </div>
-        
-        <input type="file" id="qrCodeFileInput" accept="image/*" style="display:none;" onchange="updateCustomQrCode(event)">
-
-        <button type="button" id="adminChangeQrBtn" style="display:none; background:#c2410c; color:white; border:none; padding:4px 10px; border-radius:8px; font-size:10px; font-weight:800; margin-bottom:6px; cursor:pointer;" onclick="triggerQrUpload()">📷 Upload / Change QR Code</button>
 
         <div style="font-size:11px; font-weight:700; color:#c2410c;">UPI ID: vjsanket@okhdfcbank</div>
         <a id="directUpiPayLink" href="upi://pay?pa=vjsanket@okhdfcbank&pn=SanketBhoir&cu=INR" target="_blank" style="display:block; background:#16a34a; color:white; padding:8px 12px; border-radius:10px; font-size:11px; font-weight:800; text-decoration:none; margin-top:8px;">
@@ -2286,7 +2257,7 @@
     db.collection("users").doc(userObj.username || userObj.phone).set(userObj);
   }
 
-  const DEFAULT_LOGO = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='38' r='18' fill='%23ea580c'/><path d='M20,85 C20,65 35,55 50,55 C65,55 80,65 80,85 Z' fill='%23ea580c'/></svg>";
+  const DEFAULT_LOGO = "Creamy Waffle Logo_HighRes.jpg";
   const DEFAULT_QR = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBoRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAARgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAARAAAATgEyAAIAAAAUAAAAVIdpAAQAAAABAAAAWogAAAAQSkpBQU5FUiBTVFJJQ0sgUkVTVFJJQ1RJT04gVEhFUkUgSVMgTk9UIFNFTlNJVElWRSAK...";
 
   const defaultCategories = [
@@ -2343,7 +2314,6 @@
         "Pista Kunafa [Candy Waffle]",
         "Silky Temptation [Candy Waffle]",
         "Coffee Moka [Candy Waffle]",
-        "Creamy White [Candy Waffle]",
         "Fancy Cookies [Candy Waffle]",
         "Red Velvet [Candy Waffle]",
         "Butterscotch [Candy Waffle]",
@@ -2866,32 +2836,8 @@
   }
 
   function loadProfilePhoto() {
-    let savedPhoto = localStorage.getItem('paras_profile_photo');
-    if (!savedPhoto) {
-      savedPhoto = DEFAULT_LOGO;
-    }
-    document.getElementById('profileImg').src = savedPhoto;
-    document.getElementById('authLogoImg').src = savedPhoto;
-  }
-
-  function triggerProfileUpload() {
-    const inputElem = document.getElementById('profileFileInput');
-    inputElem.value = "";
-    inputElem.click();
-  }
-
-  function updateProfilePhoto(event) {
-    const file = event.target.files[0];
-    if (file) {
-      compressImage(file, 400, 0.7, (compressedUrl) => {
-        try {
-          localStorage.setItem('paras_profile_photo', compressedUrl);
-          loadProfilePhoto();
-        } catch(err) {
-          alert("Image size too large!");
-        }
-      });
-    }
+    document.getElementById('profileImg').src = DEFAULT_LOGO;
+    document.getElementById('authLogoImg').src = DEFAULT_LOGO;
   }
 
   function compressImage(file, maxWidth, quality, callback) {
@@ -3036,7 +2982,6 @@
     renderProducts(document.getElementById('searchInput').value);
   }
 
-  // FIXED SEARCH & FILTER FUNCTIONALITY
   function filterItems() {
     const query = document.getElementById('searchInput').value;
     const clearBtn = document.getElementById('clearSearchBtn');
