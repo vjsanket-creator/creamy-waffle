@@ -4,9 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Creamy Waffle - Photo Gallery & Orders</title>
+  
+  <!-- PWA Manifest & App Icons Support -->
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Creamy%20Waffle%22%2C%22short_name%22%3A%22Waffle%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23fdba74%22%2C%22theme_color%22%3A%22%23ea580c%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2738%27%20r%3D%2718%27%20fill%3D%27%23ea580c%27%2F%3E%3Cpath%20d%3D%27M20%2C85%20C20%2C65%2035%2C55%2050%2C55%20C65%2C55%2080%2C65%2080%2C85%20Z%27%20fill%3D%27%23ea580c%27%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%2522%7D%5D%7D">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Creamy Waffle">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='38' r='18' fill='%23ea580c'/><path d='M20,85 C20,65 35,55 50,55 C65,55 80,65 80,85 Z' fill='%23ea580c'/></svg>">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  
+  <!-- Firebase App, Firestore & Analytics Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+
   <style>
     :root {
       --bg-light: #fff7ed;
@@ -2212,23 +2227,94 @@
 </div>
 
 <script>
+  // Firebase Configuration & Initialization
+  const firebaseConfig = {
+    apiKey: "AIzaSyCI0J1SPzk4blw7en9Mwsnp2Q8KpbP__R4",
+    authDomain: "creamywaffleapp.firebaseapp.com",
+    projectId: "creamywaffleapp",
+    storageBucket: "creamywaffleapp.appspot.com",
+    messagingSenderId: "920534737774",
+    appId: "1:920534737774:web:2c219c0ad019f59af9977f",
+    measurementId: "G-LDDMZSZHH"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const analytics = firebase.analytics();
+
+  let previousOrderCount = null;
+
+  // Sound Notification Function (BEEP/POP)
+  function playOrderNotificationSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5 note
+      
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.5);
+    } catch(e) {
+      console.log("Audio context prevented or not supported.");
+    }
+  }
+
+  // Real-time synchronization listeners for Orders & Users
+  db.collection("orders").onSnapshot((snapshot) => {
+    let newOrdersList = [];
+    snapshot.forEach((doc) => {
+      newOrdersList.push(doc.data());
+    });
+
+    if (previousOrderCount !== null && newOrdersList.length > previousOrderCount) {
+      if (currentUser && currentUser.role === 'admin') {
+        playOrderNotificationSound();
+      }
+    }
+    previousOrderCount = newOrdersList.length;
+    orderQueue = newOrdersList;
+
+    updateNotificationBadge();
+    if (adminOrdersOverlay.classList.contains('active')) renderAdminOrders();
+    if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
+  });
+
+  db.collection("users").onSnapshot((snapshot) => {
+    let cloudUsers = [];
+    snapshot.forEach((doc) => {
+      cloudUsers.push(doc.data());
+    });
+    if (cloudUsers.length > 0) {
+      registeredUsers = cloudUsers;
+      localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+    }
+  });
+
+  function syncOrderToCloud(orderObj) {
+    db.collection("orders").doc(orderObj.orderId).set(orderObj);
+  }
+
+  function syncUserToCloud(userObj) {
+    db.collection("users").doc(userObj.username || userObj.phone).set(userObj);
+  }
+
   const DEFAULT_LOGO = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='38' r='18' fill='%23ffffff'/><path d='M20,85 C20,65 35,55 50,55 C65,55 80,65 80,85 Z' fill='%23ffffff'/></svg>";
   const DEFAULT_QR = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBoRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAARgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAARAAAATgEyAAIAAAAUAAAAVIdpAAQAAAABAAAAWogAAAAQSkpBQU5FUiBTVFJJQ0sgUkVTVFJJQ1RJT04gVEhFUkUgSVMgTk9UIFNFTlNJVElWRSAK...";
 
-  const SVG_IMAGES = {
-    POPSI: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fff1f2'/><path d='M70,40 C70,25 130,25 130,40 L130,130 C130,140 70,140 70,130 Z' fill='%23f43f5e'/><path d='M70,40 C70,25 130,25 130,40 L130,70 L70,90 Z' fill='%23fb7185'/><rect x='93' y='130' width='14' height='45' rx='7' fill='%23d97706'/><line x1='75' y1='60' x2='125' y2='80' stroke='%23ffffff' stroke-width='4' stroke-linecap='round'/><line x1='75' y1='85' x2='125' y2='105' stroke='%23ffffff' stroke-width='4' stroke-linecap='round'/></svg>",
-    CANDY: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fef3c7'/><circle cx='100' cy='85' r='50' fill='%23f59e0b'/><path d='M100,35 A50,50 0 0,1 150,85 L100,85 Z' fill='%23ef4444'/><path d='M100,85 A50,50 0 0,1 50,85 L100,85 Z' fill='%233b82f6'/><path d='M100,85 A50,50 0 0,1 100,135 L100,85 Z' fill='%2310b981'/><circle cx='100' cy='85' r='18' fill='%23ffffff'/><rect x='95' y='135' width='10' height='45' rx='5' fill='%23d97706'/></svg>",
-    SANDWICH: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fff7ed'/><path d='M40,110 L100,40 L160,110 Z' fill='%23d97706'/><path d='M35,115 L100,45 L165,115 Z' stroke='%2378350f' stroke-width='6' fill='none'/><rect x='30' y='110' width='140' height='25' rx='8' fill='%2378350f'/><path d='M40,120 Q60,135 80,120 Q100,135 120,120 Q140,135 160,120' stroke='%23f59e0b' stroke-width='6' fill='none'/></svg>",
-    PANCAKES: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fef3c7'/><ellipse cx='100' cy='140' rx='65' ry='20' fill='%23d97706'/><ellipse cx='100' cy='115' rx='60' ry='18' fill='%23f59e0b'/><ellipse cx='100' cy='90' rx='55' ry='16' fill='%23fbbf24'/><rect x='88' y='72' width='24' height='16' rx='3' fill='%23fef08a' stroke='%23d97706'/><path d='M90,88 C90,110 110,100 110,130' stroke='%2378350f' stroke-width='5' fill='none'/></svg>",
-    BOWLCAKE: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fef2f2'/><path d='M40,90 L55,150 C57,160 143,160 145,150 L160,90 Z' fill='%23ea580c'/><ellipse cx='100' cy='90' rx='60' ry='20' fill='%2378350f'/><ellipse cx='100' cy='86' rx='52' ry='15' fill='%23fbcfe8'/><circle cx='85' cy='82' r='8' fill='%23dc2626'/><circle cx='110' cy='85' r='6' fill='%2378350f'/><circle cx='100' cy='88' r='5' fill='%23f59e0b'/></svg>",
-    DEFAULT_BG: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23fff7ed'/><path d='M10 10 L30 30 M50 10 L70 30 M10 50 L30 70 M50 50 L70 70' stroke='%23fed7aa' stroke-width='2'/></svg>"
-  };
-
   const defaultCategories = [
-    { name: "All", img: SVG_IMAGES.PANCAKES },
-    { name: "Healthy Food", img: SVG_IMAGES.SANDWICH },
-    { name: "Fresh Juice", img: SVG_IMAGES.POPSI },
-    { name: "Salads", img: SVG_IMAGES.CANDY }
+    { name: "All", img: "Pan Cakes_HighRes.jpg" },
+    { name: "Healthy Food", img: "Sandwich_HighRes.jpg" },
+    { name: "Fresh Juice", img: "Popsi_HighRes.jpg" },
+    { name: "Salads", img: "Candy_HighRes.jpg" }
   ];
 
   const defaultProducts = [
@@ -2260,7 +2346,7 @@
         "Biscoff Chocolate [Popsi Waffle]",
         "Nutella Waffle [Popsi Waffle]"
       ],
-      image: SVG_IMAGES.POPSI
+      image: "Popsi_HighRes.jpg"
     },
     {
       name: "CANDY",
@@ -2290,11 +2376,11 @@
         "Biscoff Chocolate [Candy Waffle]",
         "Nutella Waffle [Candy Waffle]"
       ],
-      image: SVG_IMAGES.CANDY
+      image: "Candy_HighRes.jpg"
     },
     {
       name: "SANDWICH",
-      fixedPrice: "99",
+      fixedPrice: "79",
       rating: "5.0",
       likesCount: 19,
       isLiked: false,
@@ -2318,11 +2404,11 @@
         "Nutella Waffle [Sandwich Waffle]",
         "Pista Kunafa [Sandwich Waffle]"
       ],
-      image: SVG_IMAGES.SANDWICH
+      image: "Sandwich_HighRes.jpg"
     },
     {
       name: "PAN CAKES",
-      fixedPrice: "99",
+      fixedPrice: "89",
       rating: "5.0",
       likesCount: 24,
       isLiked: false,
@@ -2348,11 +2434,11 @@
         "Nutella Waffle [Pan cake Waffle]",
         "Pista Kunafa [Pan cake Waffle]"
       ],
-      image: SVG_IMAGES.PANCAKES
+      image: "Pan Cakes_HighRes.jpg"
     },
     {
       name: "BOWL CAKE",
-      fixedPrice: "149",
+      fixedPrice: "99",
       rating: "5.0",
       likesCount: 31,
       isLiked: false,
@@ -2378,7 +2464,7 @@
         "Nutella Waffle [Cake Waffle]",
         "Pista Kunafa [Cake Waffle]"
       ],
-      image: SVG_IMAGES.BOWLCAKE
+      image: "Bowl Cake_HighRes.jpg"
     }
   ];
 
@@ -2390,7 +2476,7 @@
       id: 1,
       userName: "Priya Sharma",
       usernameKey: "priya",
-      image: SVG_IMAGES.POPSI,
+      image: "Popsi_HighRes.jpg",
       caption: "Enjoying delicious Popsi Waffle! 😋🧇",
       likes: 14,
       isLiked: false,
@@ -2402,7 +2488,7 @@
       id: 2,
       userName: "Rahul Sharma",
       usernameKey: "rahul",
-      image: SVG_IMAGES.SANDWICH,
+      image: "Sandwich_HighRes.jpg",
       caption: "Crispy waffle sandwich treat! 🔥",
       likes: 9,
       isLiked: false,
@@ -2498,6 +2584,16 @@
     inputElem.click();
   }
 
+  function updateCustomQrCode(event) {
+    const file = event.target.files[0];
+    if (file) {
+      compressImage(file, 400, 0.7, (compressedUrl) => {
+        localStorage.setItem('paras_payment_qr', compressedUrl);
+        loadPaymentQrCode();
+      });
+    }
+  }
+
   function toggleAuthMode() {
     if (authMode === 'login') {
       switchAuthFlow('signup');
@@ -2588,6 +2684,7 @@
 
     activeRecoveryUser.pass = newPass;
     localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+    syncUserToCloud(activeRecoveryUser);
     alert("🎉 Password reset successfully! Please login with your new password.");
     document.getElementById('authForm').reset();
     switchAuthFlow('login');
@@ -2627,6 +2724,7 @@
       const newUser = { name, username, email, phone, pass, role: "customer" };
       registeredUsers.push(newUser);
       localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+      syncUserToCloud(newUser);
       currentUser = newUser;
       localStorage.setItem('paras_current_user', JSON.stringify(currentUser));
       alert("🎉 Account created successfully!");
@@ -2702,22 +2800,23 @@
   }
 
   function loadCustomBg() {
-    const savedBg = localStorage.getItem('paras_custom_bg') || SVG_IMAGES.DEFAULT_BG;
+    const savedBg = localStorage.getItem('paras_custom_bg');
     const savedOpacity = localStorage.getItem('paras_bg_opacity') || "0.3";
     const bgLayer = document.getElementById('bgCustomLayer');
     const opacityBox = document.getElementById('opacityControlBox');
     const removeBtn = document.getElementById('btnRemoveBg');
     const opacityRange = document.getElementById('opacityRange');
 
-    bgLayer.style.backgroundImage = `url("${savedBg}")`;
-    bgLayer.style.opacity = savedOpacity;
-    opacityRange.value = savedOpacity;
-    document.getElementById('opacityValText').textContent = Math.round(savedOpacity * 100) + "%";
-    opacityBox.style.display = "flex";
-
-    if (localStorage.getItem('paras_custom_bg')) {
+    if (savedBg) {
+      bgLayer.style.backgroundImage = `url("${savedBg}")`;
+      bgLayer.style.opacity = savedOpacity;
+      opacityRange.value = savedOpacity;
+      document.getElementById('opacityValText').textContent = Math.round(savedOpacity * 100) + "%";
+      opacityBox.style.display = "flex";
       removeBtn.style.display = "inline-block";
     } else {
+      bgLayer.style.backgroundImage = "none";
+      opacityBox.style.display = "none";
       removeBtn.style.display = "none";
     }
   }
@@ -2856,7 +2955,32 @@
       cartItems = [];
       orderQueue = [];
       feedbackQueue = [];
-      galleryQueue = [];
+      galleryQueue = [
+        {
+          id: 1,
+          userName: "Priya Sharma",
+          usernameKey: "priya",
+          image: "Popsi_HighRes.jpg",
+          caption: "Enjoying delicious Popsi Waffle! 😋🧇",
+          likes: 14,
+          isLiked: false,
+          timestamp: "Sep 2026",
+          month: "Sep",
+          comments: []
+        },
+        {
+          id: 2,
+          userName: "Rahul Sharma",
+          usernameKey: "rahul",
+          image: "Sandwich_HighRes.jpg",
+          caption: "Crispy waffle sandwich treat! 🔥",
+          likes: 9,
+          isLiked: false,
+          timestamp: "Aug 2026",
+          month: "Aug",
+          comments: []
+        }
+      ];
       orderCounter = 1000;
       showOnlyLiked = false;
       updateCartBadge();
@@ -3658,6 +3782,7 @@
   function finalizeOrderCompletion(orderObj) {
     orderQueue.push(orderObj);
     saveOrdersToStorage();
+    syncOrderToCloud(orderObj);
 
     cartItems = [];
     document.getElementById('custNameInput').value = '';
@@ -3902,6 +4027,7 @@
     const order = orderQueue[index];
     order.status = newStatus;
     saveOrdersToStorage();
+    syncOrderToCloud(order);
     renderAdminOrders();
 
     const cleanPhone = (order.customerPhone || '').replace(/[^0-9]/g, '');
@@ -4010,52 +4136,56 @@
 
     const handleSave = (imgUrl) => {
       if (type === 'product') {
-        const rawFlavours = document.getElementById('itemFlavours').value;
-        const parsedFlavours = rawFlavours ? rawFlavours.split(',').map(f => f.trim()).filter(f => f.length > 0) : [];
+        const name = document.getElementById('itemName').value.trim();
+        const fixedPrice = document.getElementById('fixedPrice').value.trim();
+        const flavoursStr = document.getElementById('itemFlavours').value.trim();
+        const flavours = flavoursStr ? flavoursStr.split(',').map(f => f.trim()).filter(f => f) : [];
+        const description = document.getElementById('itemDescription').value.trim();
+        const category = document.getElementById('itemCategory').value;
+        const rating = document.getElementById('itemRating').value.trim() || "5.0";
+        const theme = document.getElementById('itemTheme').value;
 
-        const productData = {
-          name: document.getElementById('itemName').value,
-          fixedPrice: document.getElementById('fixedPrice').value,
-          flavours: parsedFlavours.length > 0 ? parsedFlavours : ["Original Regular"],
-          description: document.getElementById('itemDescription').value || "Prepared fresh daily.",
-          category: document.getElementById('itemCategory').value || "All",
-          rating: document.getElementById('itemRating').value || "5.0",
-          theme: document.getElementById('itemTheme').value,
-          likesCount: index >= 0 ? products[index].likesCount : 0,
-          isLiked: index >= 0 ? products[index].isLiked : false,
-          image: imgUrl || (index >= 0 ? products[index].image : SVG_IMAGES.POPSI)
+        const productObj = {
+          name,
+          fixedPrice,
+          rating,
+          likesCount: index > -1 ? products[index].likesCount : 0,
+          isLiked: index > -1 ? products[index].isLiked : false,
+          category,
+          theme,
+          description,
+          flavours,
+          image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
         };
 
-        if (index >= 0) {
-          products[index] = productData;
+        if (index > -1) {
+          products[index] = productObj;
         } else {
-          products.unshift(productData);
+          products.push(productObj);
         }
       } else {
-        const oldCatName = index >= 0 ? categories[index].name : '';
-        const newCatName = document.getElementById('catName').value;
-
-        const categoryData = {
-          name: newCatName,
-          img: imgUrl || (index >= 0 ? categories[index].img : SVG_IMAGES.PANCAKES)
+        const catName = document.getElementById('catName').value.trim();
+        if (!catName) return;
+        const categoryObj = {
+          name: catName,
+          img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
         };
 
-        if (index >= 0) {
-          categories[index] = categoryData;
+        if (index > -1) {
+          const oldName = categories[index].name;
+          categories[index] = categoryObj;
           products.forEach(p => {
-            if (p.category === oldCatName) p.category = newCatName;
+            if (p.category === oldName) p.category = catName;
           });
-          if (selectedCategory === oldCatName) selectedCategory = newCatName;
         } else {
-          categories.push(categoryData);
+          categories.push(categoryObj);
         }
       }
 
-      if (saveData()) {
-        renderCategories();
-        renderProducts();
-        closeModal();
-      }
+      saveData();
+      closeModal();
+      renderCategories();
+      renderProducts();
     };
 
     if (imgFile) {
@@ -4067,36 +4197,12 @@
     }
   });
 
-  function filterItems() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-    const text = searchInput.value;
-
-    if (text.length > 0) {
-      clearBtn.style.display = 'flex';
-    } else {
-      clearBtn.style.display = 'none';
-    }
-
-    renderProducts(text);
-  }
-
-  function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-    searchInput.value = '';
-    clearBtn.style.display = 'none';
-    renderProducts('');
-    searchInput.focus();
-  }
-
+  // Initial Boot
   loadShopTitle();
   loadProfilePhoto();
   loadCustomBg();
   loadPaymentQrCode();
-  updateNotificationBadge();
   checkAuthState();
 </script>
-
 </body>
 </html>
