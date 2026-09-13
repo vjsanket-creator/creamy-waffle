@@ -105,7 +105,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 24px 30px;
+      padding: 20px 30px;
       transition: transform 0.35s ease;
       overflow-y: auto;
     }
@@ -118,38 +118,40 @@
 
     .auth-logo-box {
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
+      gap: 6px;
     }
 
     .auth-brand-emblem {
-      width: 140px;
-      height: 130px;
+      width: 250px;
+      height: 250px;
       object-fit: cover;
       border-radius: 50%;
       border: 3px solid #fed7aa;
       background: #ffffff;
       display: block;
-      box-shadow: 0 8px 18px rgba(234, 88, 12, 0.2);
+      box-shadow: 0 10px 22px rgba(234, 88, 12, 0.25);
       margin: 0 auto 6px;
     }
 
     .auth-logo-title {
       font-family: 'Pacifico', cursive;
-      font-size: 24px;
+      font-size: 36px;
       color: var(--primary-orange);
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
       line-height: 1.1;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .auth-subtitle {
-      font-size: 11px;
+      font-size: 13px;
       color: #9a3412;
       font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 12px;
     }
 
     .auth-form {
@@ -261,7 +263,7 @@
 
     .user-greeting .title {
       font-family: 'Pacifico', cursive;
-      font-size: 25px;
+      font-size: 36px;
       font-weight: 400;
       letter-spacing: 0px;
       color: #ff9800;
@@ -2249,6 +2251,34 @@
     }
   });
 
+  // REAL-TIME CLOUD SYNC FOR MENU & CATEGORIES ACROSS ALL DEVICES / USERS
+  db.collection("menu").doc("store_config").onSnapshot((doc) => {
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.categories) {
+        categories = data.categories;
+        localStorage.setItem('paras_categories', JSON.stringify(categories));
+      }
+      if (data.products) {
+        products = data.products;
+        localStorage.setItem('paras_products', JSON.stringify(products));
+      }
+      renderCategories();
+      renderProducts(document.getElementById('searchInput').value);
+    } else {
+      // Initialize Firestore if not present
+      syncMenuToCloud();
+    }
+  });
+
+  function syncMenuToCloud() {
+    db.collection("menu").doc("store_config").set({
+      categories: categories,
+      products: products,
+      lastUpdated: Date.now()
+    }).catch(err => console.log("Cloud sync error:", err));
+  }
+
   function syncOrderToCloud(orderObj) {
     db.collection("orders").doc(orderObj.orderId).set(orderObj);
   }
@@ -2261,103 +2291,43 @@
   const DEFAULT_QR = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBoRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAARgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAARAAAATgEyAAIAAAAUAAAAVIdpAAQAAAABAAAAWogAAAAQSkpBQU5FUiBTVFJJQ0sgUkVTVFJJQ1RJT04gVEhFUkUgSVMgTk9UIFNFTlNJVElWRSAK...";
 
   const defaultCategories = [
-    { name: "All", img: "Pan Cakes_HighRes.jpg" },
-    { name: "Healthy Food", img: "Sandwich_HighRes.jpg" },
-    { name: "Fresh Juice", img: "Popsi_HighRes.jpg" },
-    { name: "Salads", img: "Candy_HighRes.jpg" }
+    { name: "All", img: "Pan Cakes_HighRes.jpg" }
   ];
 
   const defaultProducts = [
     {
-      name: "POPSI",
-      fixedPrice: "49",
+      name: "BOWL CAKE",
+      fixedPrice: "299",
       rating: "5.0",
-      likesCount: 12,
+      likesCount: 31,
       isLiked: false,
       category: "All",
-      theme: "card-peach",
-      description: "Refreshing cold popsicles in rich artisan flavours.",
+      theme: "card-orange",
+      description: "Rich layered dessert bowl cake cooked to perfection.",
       flavours: [
-        "Marvel Hazelnut [Popsi Waffle]",
-        "Carnival Belgian [Popsi Waffle]",
-        "Dark Dazzle [Popsi Waffle]",
-        "Pista Kunafa [Popsi Waffle]",
-        "Silky Temptation [Popsi Waffle]",
-        "Coffee Moka [Popsi Waffle]",
-        "Creamy White [Popsi Waffle]",
-        "Fancy Cookies [Popsi Waffle]",
-        "Red Velvet [Popsi Waffle]",
-        "Butterscotch [Popsi Waffle]",
-        "Medley Almond [Popsi Waffle]",
-        "Orange Elixir [Popsi Waffle]",
-        "Heaven Strawberry [Popsi Waffle]",
-        "Midnight Mango [Popsi Waffle]",
-        "Dual Chocolate [Popsi Waffle]",
-        "Biscoff Chocolate [Popsi Waffle]",
-        "Nutella Waffle [Popsi Waffle]"
+        "Marvel Hazelnut [Cake Waffle]",
+        "Carnival Belgian [Cake Waffle]",
+        "Dark Dazzle [Cake Waffle]",
+        "Silky Temptation [Cake Waffle]",
+        "Creamy White [Cake Waffle]",
+        "Fancy Cookies [Cake Waffle]",
+        "Red Velvet [Cake Waffle]",
+        "Butterscotch [Cake Waffle]",
+        "Coffee Moka [Cake Waffle]",
+        "Medley Almond [Cake Waffle]",
+        "Orange Elixir [Cake Waffle]",
+        "Heaven Strawberry [Cake Waffle]",
+        "Midnight Mango [Cake Waffle]",
+        "Dual Chocolate [Cake Waffle]",
+        "Biscoff Chocolate [Cake Waffle]",
+        "Nutella Waffle [Cake Waffle]",
+        "Pista Kunafa [Cake Waffle]"
       ],
-      image: "Popsi_HighRes.jpg"
-    },
-    {
-      name: "CANDY",
-      fixedPrice: "49",
-      rating: "5.0",
-      likesCount: 8,
-      isLiked: false,
-      category: "All",
-      theme: "card-amber",
-      description: "Playful fruity candy pop with delicious sweet glazes.",
-      flavours: [
-        "Marvel Hazelnut [Candy Waffle]",
-        "Carnival Belgian [Candy Waffle]",
-        "Dark Dazzle [Candy Waffle]",
-        "Pista Kunafa [Candy Waffle]",
-        "Silky Temptation [Candy Waffle]",
-        "Coffee Moka [Candy Waffle]",
-        "Fancy Cookies [Candy Waffle]",
-        "Red Velvet [Candy Waffle]",
-        "Butterscotch [Candy Waffle]",
-        "Medley Almond [Candy Waffle]",
-        "Orange Elixir [Candy Waffle]",
-        "Heaven Strawberry [Candy Waffle]",
-        "Midnight Mango [Candy Waffle]",
-        "Dual Chocolate [Candy Waffle]",
-        "Biscoff Chocolate [Candy Waffle]",
-        "Nutella Waffle [Candy Waffle]"
-      ],
-      image: "Candy_HighRes.jpg"
-    },
-    {
-      name: "SANDWICH",
-      fixedPrice: "79",
-      rating: "5.0",
-      likesCount: 19,
-      isLiked: false,
-      category: "All",
-      theme: "card-peach",
-      description: "Crispy freshly baked waffle sandwich stuffed with rich fillings.",
-      flavours: [
-        "Marvel Hazelnut [Sandwich Waffle]",
-        "Carnival Belgian [Sandwich Waffle]",
-        "Dark Dazzle [Sandwich Waffle]",
-        "Silky Temptation [Sandwich Waffle]",
-        "Creamy White [Sandwich Waffle]",
-        "Fancy Cookies [Sandwich Waffle]",
-        "Red Velvet [Sandwich Waffle]",
-        "Butterscotch [Sandwich Waffle]",
-        "Coffee Moka [Sandwich Waffle]",
-        "Medley Almond [Sandwich Waffle]",
-        "Heaven Strawberry [Sandwich Waffle]",
-        "Midnight Mango [Sandwich Waffle]",
-        "Biscoff Chocolate [Sandwich Waffle]",
-        "Nutella Waffle [Sandwich Waffle]",
-        "Pista Kunafa [Sandwich Waffle]"
-      ],
-      image: "Sandwich_HighRes.jpg"
+      image: "Bowl Cake_HighRes.jpg"
     },
     {
       name: "PAN CAKES",
-      fixedPrice: "89",
+      fixedPrice: "149",
       rating: "5.0",
       likesCount: 24,
       isLiked: false,
@@ -2386,34 +2356,90 @@
       image: "Pan Cakes_HighRes.jpg"
     },
     {
-      name: "BOWL CAKE",
+      name: "SANDWICH",
       fixedPrice: "99",
       rating: "5.0",
-      likesCount: 31,
+      likesCount: 19,
       isLiked: false,
       category: "All",
-      theme: "card-orange",
-      description: "Rich layered dessert bowl cake cooked to perfection.",
+      theme: "card-peach",
+      description: "Crispy freshly baked waffle sandwich stuffed with rich fillings.",
       flavours: [
-        "Marvel Hazelnut [Cake Waffle]",
-        "Carnival Belgian [Cake Waffle]",
-        "Dark Dazzle [Cake Waffle]",
-        "Silky Temptation [Cake Waffle]",
-        "Creamy White [Cake Waffle]",
-        "Fancy Cookies [Cake Waffle]",
-        "Red Velvet [Cake Waffle]",
-        "Butterscotch [Cake Waffle]",
-        "Coffee Moka [Cake Waffle]",
-        "Medley Almond [Cake Waffle]",
-        "Orange Elixir [Cake Waffle]",
-        "Heaven Strawberry [Cake Waffle]",
-        "Midnight Mango [Cake Waffle]",
-        "Dual Chocolate [Cake Waffle]",
-        "Biscoff Chocolate [Cake Waffle]",
-        "Nutella Waffle [Cake Waffle]",
-        "Pista Kunafa [Cake Waffle]"
+        "Marvel Hazelnut [Sandwich Waffle]",
+        "Carnival Belgian [Sandwich Waffle]",
+        "Dark Dazzle [Sandwich Waffle]",
+        "Silky Temptation [Sandwich Waffle]",
+        "Creamy White [Sandwich Waffle]",
+        "Fancy Cookies [Sandwich Waffle]",
+        "Red Velvet [Sandwich Waffle]",
+        "Butterscotch [Sandwich Waffle]",
+        "Coffee Moka [Sandwich Waffle]",
+        "Medley Almond [Sandwich Waffle]",
+        "Heaven Strawberry [Sandwich Waffle]",
+        "Midnight Mango [Sandwich Waffle]",
+        "Biscoff Chocolate [Sandwich Waffle]",
+        "Nutella Waffle [Sandwich Waffle]",
+        "Pista Kunafa [Sandwich Waffle]"
       ],
-      image: "Bowl Cake_HighRes.jpg"
+      image: "Sandwich_HighRes.jpg"
+    },
+    {
+      name: "CANDY",
+      fixedPrice: "99",
+      rating: "5.0",
+      likesCount: 8,
+      isLiked: false,
+      category: "All",
+      theme: "card-amber",
+      description: "Playful fruity candy pop with delicious sweet glazes.",
+      flavours: [
+        "Marvel Hazelnut [Candy Waffle]",
+        "Carnival Belgian [Candy Waffle]",
+        "Dark Dazzle [Candy Waffle]",
+        "Pista Kunafa [Candy Waffle]",
+        "Silky Temptation [Candy Waffle]",
+        "Coffee Moka [Candy Waffle]",
+        "Fancy Cookies [Candy Waffle]",
+        "Red Velvet [Candy Waffle]",
+        "Butterscotch [Candy Waffle]",
+        "Medley Almond [Candy Waffle]",
+        "Orange Elixir [Candy Waffle]",
+        "Heaven Strawberry [Candy Waffle]",
+        "Midnight Mango [Candy Waffle]",
+        "Biscoff Chocolate [Candy Waffle]",
+        "Nutella Waffle [Candy Waffle]"
+      ],
+      image: "Candy_HighRes.jpg"
+    },
+    {
+      name: "POPSI",
+      fixedPrice: "99",
+      rating: "5.0",
+      likesCount: 12,
+      isLiked: false,
+      category: "All",
+      theme: "card-peach",
+      description: "Refreshing cold popsicles in rich artisan flavours.",
+      flavours: [
+        "Marvel Hazelnut [Popsi Waffle]",
+        "Carnival Belgian [Popsi Waffle]",
+        "Dark Dazzle [Popsi Waffle]",
+        "Pista Kunafa [Popsi Waffle]",
+        "Silky Temptation [Popsi Waffle]",
+        "Coffee Moka [Popsi Waffle]",
+        "Creamy White [Popsi Waffle]",
+        "Fancy Cookies [Popsi Waffle]",
+        "Red Velvet [Popsi Waffle]",
+        "Butterscotch [Popsi Waffle]",
+        "Medley Almond [Popsi Waffle]",
+        "Orange Elixir [Popsi Waffle]",
+        "Heaven Strawberry [Popsi Waffle]",
+        "Midnight Mango [Popsi Waffle]",
+        "Dual Chocolate [Popsi Waffle]",
+        "Biscoff Chocolate [Popsi Waffle]",
+        "Nutella Waffle [Popsi Waffle]"
+      ],
+      image: "Popsi_HighRes.jpg"
     }
   ];
 
@@ -2509,8 +2535,6 @@
       document.getElementById('addCategoryBtn').style.display = isAdmin ? 'inline-block' : 'none';
       document.getElementById('addProductBtn').style.display = isAdmin ? 'inline-block' : 'none';
       document.getElementById('adminBgControls').style.display = isAdmin ? 'flex' : 'none';
-      document.getElementById('adminChangeQrBtn').style.display = isAdmin ? 'inline-block' : 'none';
-      document.getElementById('qrUploadHint').style.display = isAdmin ? 'block' : 'none';
 
       loadPaymentQrCode();
       loadProfilePhoto();
@@ -2525,23 +2549,6 @@
     let savedQr = localStorage.getItem('paras_payment_qr') || DEFAULT_QR;
     document.getElementById('paymentQrImg').src = savedQr;
     document.getElementById('gatewayQrImg').src = savedQr;
-  }
-
-  function triggerQrUpload() {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    const inputElem = document.getElementById('qrCodeFileInput');
-    inputElem.value = "";
-    inputElem.click();
-  }
-
-  function updateCustomQrCode(event) {
-    const file = event.target.files[0];
-    if (file) {
-      compressImage(file, 400, 0.7, (compressedUrl) => {
-        localStorage.setItem('paras_payment_qr', compressedUrl);
-        loadPaymentQrCode();
-      });
-    }
   }
 
   function toggleAuthMode() {
@@ -2796,7 +2803,7 @@
         try {
           localStorage.setItem('paras_custom_bg', compressedUrl);
           if (!localStorage.getItem('paras_bg_opacity')) {
-            localStorage.setItem('paras_bg_opacity', '0.5');
+            localStorage.getItem('paras_bg_opacity', '0.5');
           }
           loadCustomBg();
         } catch(err) {
@@ -2872,10 +2879,11 @@
     container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
   }
 
-  function saveData() {
+  function saveDataLocally() {
     try {
       localStorage.setItem('paras_categories', JSON.stringify(categories));
       localStorage.setItem('paras_products', JSON.stringify(products));
+      syncMenuToCloud();
       return true;
     } catch(e) {
       alert("Storage limit reached!");
@@ -2920,6 +2928,7 @@
       ];
       orderCounter = 1000;
       showOnlyLiked = false;
+      syncMenuToCloud();
       updateCartBadge();
       updateNotificationBadge();
       loadShopTitle();
@@ -3009,7 +3018,7 @@
       p.isLiked = true;
       p.likesCount = (p.likesCount || 0) + 1;
     }
-    saveData();
+    saveDataLocally();
     renderProducts(document.getElementById('searchInput').value);
   }
 
@@ -4055,7 +4064,7 @@
     if (confirm("Delete category '" + c.name + "'?")) {
       categories.splice(index, 1);
       if (selectedCategory === c.name) selectedCategory = "All";
-      saveData();
+      saveDataLocally();
       renderCategories();
       renderProducts(document.getElementById('searchInput').value);
     }
@@ -4066,8 +4075,8 @@
     const newRating = prompt("Enter new rating for " + products[index].name + " (1 to 5):", products[index].rating);
     if (newRating && !isNaN(newRating) && newRating >= 1 && newRating <= 5) {
       products[index].rating = parseFloat(newRating).toFixed(1);
-      saveData();
-      renderProducts(document.getElementById('searchInput').value);
+      saveDataLocally();
+      renderProducts(document.getElementById('searchInput'.value));
     }
   }
 
@@ -4075,7 +4084,7 @@
     if (!currentUser || currentUser.role !== 'admin') return;
     if (confirm("Delete " + products[index].name + "?")) {
       products.splice(index, 1);
-      saveData();
+      saveDataLocally();
       renderProducts(document.getElementById('searchInput').value);
     }
   }
@@ -4102,61 +4111,61 @@
         const productObj = {
           name,
           fixedPrice,
-          rating,
-          likesCount: index > -1 ? products[index].likesCount : 0,
-          isLiked: index > -1 ? products[index].isLiked : false,
-          category,
-          theme,
-          description,
-          flavours,
-          image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
-        };
+            rating,
+            likesCount: index > -1 ? products[index].likesCount : 0,
+            isLiked: index > -1 ? products[index].isLiked : false,
+            category,
+            theme,
+            description,
+            flavours,
+            image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
+          };
 
-        if (index > -1) {
-          products[index] = productObj;
+          if (index > -1) {
+            products[index] = productObj;
+          } else {
+            products.push(productObj);
+          }
         } else {
-          products.push(productObj);
+          const catName = document.getElementById('catName').value.trim();
+          if (!catName) return;
+          const categoryObj = {
+            name: catName,
+            img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
+          };
+
+          if (index > -1) {
+            const oldName = categories[index].name;
+            categories[index] = categoryObj;
+            products.forEach(p => {
+              if (p.category === oldName) p.category = catName;
+            });
+          } else {
+            categories.push(categoryObj);
+          }
         }
+
+        saveDataLocally();
+        closeModal();
+        renderCategories();
+        renderProducts(document.getElementById('searchInput').value);
+      };
+
+      if (imgFile) {
+        compressImage(imgFile, 400, 0.7, (compressedUrl) => {
+          handleSave(compressedUrl);
+        });
       } else {
-        const catName = document.getElementById('catName').value.trim();
-        if (!catName) return;
-        const categoryObj = {
-          name: catName,
-          img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
-        };
-
-        if (index > -1) {
-          const oldName = categories[index].name;
-          categories[index] = categoryObj;
-          products.forEach(p => {
-            if (p.category === oldName) p.category = catName;
-          });
-        } else {
-          categories.push(categoryObj);
-        }
+        handleSave(null);
       }
+    });
 
-      saveData();
-      closeModal();
-      renderCategories();
-      renderProducts(document.getElementById('searchInput').value);
-    };
-
-    if (imgFile) {
-      compressImage(imgFile, 400, 0.7, (compressedUrl) => {
-        handleSave(compressedUrl);
-      });
-    } else {
-      handleSave(null);
-    }
-  });
-
-  // Initial Boot
-  loadShopTitle();
-  loadProfilePhoto();
-  loadCustomBg();
-  loadPaymentQrCode();
-  checkAuthState();
-</script>
+    // Initial Boot
+    loadShopTitle();
+    loadProfilePhoto();
+    loadCustomBg();
+    loadPaymentQrCode();
+    checkAuthState();
+  </script>
 </body>
 </html>
