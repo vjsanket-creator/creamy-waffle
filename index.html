@@ -2269,11 +2269,9 @@
       cloudUsers.push(doc.data());
     });
     
-    // Check if cloud is empty or missing admin, fallback / migrate from localStorage if present
     let localSavedUsers = JSON.parse(localStorage.getItem('paras_users')) || [];
     
     if (cloudUsers.length === 0 && localSavedUsers.length > 0) {
-      // Migrate local users to cloud automatically
       localSavedUsers.forEach(u => {
         let docKey = (u.username || u.phone || u.email || '').replace(/[\/]/g, '_');
         if (docKey) db.collection("users").doc(docKey).set(u);
@@ -2564,7 +2562,6 @@
   const feedbackModalOverlay = document.getElementById('feedbackModalOverlay');
   const authOverlay = document.getElementById('authOverlay');
 
-  // Pre-fill remembered login if exists
   window.addEventListener('DOMContentLoaded', () => {
     const rememberedId = localStorage.getItem('paras_remember_id');
     const rememberedPass = localStorage.getItem('paras_remember_pass');
@@ -2747,7 +2744,6 @@
       localStorage.setItem('paras_current_user', JSON.stringify(currentUser));
       alert("🎉 Account created successfully!");
     } else {
-      // Remember me handling
       const rememberChecked = document.getElementById('rememberMeCheckbox').checked;
       if (rememberChecked) {
         localStorage.setItem('paras_remember_id', identifier);
@@ -4155,11 +4151,28 @@
 
   function updateOrderStatus(index, newStatus) {
     if (!currentUser || currentUser.role !== 'admin') return;
-    orderQueue[index].status = newStatus;
+    const order = orderQueue[index];
+    order.status = newStatus;
     saveOrdersToStorage();
-    syncOrderToCloud(orderQueue[index]);
+    syncOrderToCloud(order);
     renderAdminOrders();
     if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
+
+    // Direct WhatsApp message trigger
+    let phoneNum = (order.customerPhone || '').replace(/[^0-9]/g, '');
+    if (phoneNum.length === 10) {
+      phoneNum = '91' + phoneNum;
+    }
+
+    let message = `Hello ${order.customerName}, your order ${order.orderId} status has been updated to: *${newStatus}*. Thank you for choosing Creamy Waffle! 🧇`;
+    if (newStatus === 'Ready') {
+      message = `Hello ${order.customerName}, your order ${order.orderId} is now *Ready*! Please collect it from the counter. Enjoy your Waffle! 😋🧇`;
+    } else if (newStatus === 'Paid') {
+      message = `Hello ${order.customerName}, your payment for order ${order.orderId} has been successfully received. Thank you! 🙏✨`;
+    }
+
+    const whatsappUrl = `https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   }
 
   function removeOrder(index) {
@@ -4335,7 +4348,6 @@
     }
   });
 
-  // Initial Boot
   loadShopTitle();
   loadProfilePhoto();
   loadCustomBg();
