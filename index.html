@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Creamy Waffle - Photo Gallery & Orders</title>
   
-  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Creamy%20Waffle%22%2C%22short_name%22%3A%22Waffle%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23fdba74%22%2C%22theme_color%22%3A%22%23ea580c%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2738%27%20r%3D%2718%27%20fill%3D%27%23ea580c%27%2F%3E%3Cpath%20d%3D%27M20%2C85%20C20%2C65%2035%2C55%2050%2C55%20C65%2C55%2080%2C65%2080%2C85%20Z%27%20fill%3D%27%23ea580c%27%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%2522%7D%5D%7D">
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Creamy%20Waffle%22%2C%22short_name%22%3A%22Waffle%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23fdba74%22%2C%22theme_color%22%3A%22%23ea580c%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2738%27%20r%3D%2718%27%20fill%3D%27%23ea580c%27%2F%3E%3Cpath%20d%3D%27M20%2C85%20C20%2C65%2035%2C55%2050%2C55%20C65%2C55%2080%2C65%2080%2C85%20Z%27%20fill%3D%27%23ea580c%27%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%2522%7D%5D%7D">
   <meta name="theme-color" content="#ea580c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Creamy Waffle">
-  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='38' r='18' fill='%23ea580c'/><path d='M20,85 C20,65 35,55 50,55 C65,55 80,65 80,85 Z' fill='%23ea580c'/></svg>">
+  <link rel="apple-touch-icon" href="Creamy Waffle Logo_HighRes.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,14 +126,12 @@
     }
 
     .auth-brand-emblem {
-      width: 250px;
-      height: 250px;
-      object-fit: cover;
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
       border-radius: 50%;
-      border: 3px solid #fed7aa;
-      background: #ffffff;
+      background: transparent;
       display: block;
-      box-shadow: 0 10px 22px rgba(234, 88, 12, 0.25);
       margin: 0 auto 6px;
     }
 
@@ -203,6 +201,24 @@
       font-size: 14px;
       color: #9a3412;
       outline: none;
+    }
+
+    .auth-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #7c2d12;
+      margin: 4px 0;
+      cursor: pointer;
+    }
+
+    .auth-checkbox-row input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary-orange);
+      cursor: pointer;
     }
 
     .auth-submit-btn {
@@ -309,12 +325,10 @@
     .profile-avatar {
       width: 44px;
       height: 44px;
-      border-radius: 12px;
-      background: #ffffff;
-      object-fit: cover;
+      border-radius: 50%;
+      background: transparent;
+      object-fit: contain;
       display: block;
-      border: 2px solid var(--primary-orange);
-      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
     }
 
     .btn-icon {
@@ -505,8 +519,6 @@
       backdrop-filter: blur(2px);
     }
 
-    .card-orange { background: linear-gradient(135deg, rgba(255, 237, 213, 0.92) 0%, rgba(254, 215, 170, 0.92) 100%); }
-    .card-peach { background: linear-gradient(135deg, rgba(255, 247, 237, 0.92) 0%, rgba(255, 237, 213, 0.92) 100%); }
     .card-amber { background: linear-gradient(135deg, rgba(254, 243, 199, 0.92) 0%, rgba(253, 230, 138, 0.92) 100%); }
 
     .card-top {
@@ -1124,19 +1136,7 @@
       width: 100%;
       background: transparent;
       font-weight: 600;
-    }
-
-    .arrival-note-input {
-      border: none;
-      outline: none;
-      font-size: 12px;
-      color: var(--text-dark);
-      width: 100%;
-      background: transparent;
-      resize: none;
-      height: 32px;
-      line-height: 1.3;
-      font-weight: 600;
+      cursor: pointer;
     }
 
     .summary-line { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #9a3412; }
@@ -1344,9 +1344,10 @@
 
     .admin-action-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, 1fr) auto;
       gap: 6px;
       margin-top: 6px;
+      align-items: center;
     }
 
     .btn-status-toggle {
@@ -1363,6 +1364,18 @@
     .btn-status-prep { background: #fed7aa; color: #7c2d12; }
     .btn-status-ready { background: #86efac; color: #14532d; }
     .btn-status-paid { background: #3b82f6; color: #ffffff; }
+
+    .btn-remove-order {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      padding: 9px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
 
     .btn-status-prep.glowing {
       background: #ea580c !important;
@@ -1628,21 +1641,21 @@
         <div class="auth-input-group">
           <label>Full Name</label>
           <div class="input-wrapper">
-            <input type="text" id="authName" class="no-icon" placeholder="e.g. Rahul Sharma">
+            <input type="text" id="authName" class="no-icon" placeholder="e.g. Sanket Bhoir">
           </div>
         </div>
 
         <div class="auth-input-group">
           <label>Username</label>
           <div class="input-wrapper">
-            <input type="text" id="authUsername" class="no-icon" placeholder="e.g. rahul_waffle">
+            <input type="text" id="authUsername" class="no-icon" placeholder="e.g. sanket_waffle">
           </div>
         </div>
 
         <div class="auth-input-group">
           <label>Email ID</label>
           <div class="input-wrapper">
-            <input type="email" id="authEmail" class="no-icon" placeholder="e.g. rahul@gmail.com">
+            <input type="email" id="authEmail" class="no-icon" placeholder="e.g. vjsanket@gmail.com">
           </div>
         </div>
       </div>
@@ -1689,6 +1702,12 @@
             <button type="button" class="eye-toggle-btn" onclick="togglePasswordVisibility('authPassword', this)">👁️</button>
           </div>
         </div>
+
+        <label class="auth-checkbox-row">
+          <input type="checkbox" id="rememberMeCheckbox" checked>
+          <span>Remember Me (Keep me logged in)</span>
+        </label>
+
         <div class="forgot-link" id="forgotPasswordLink" onclick="switchAuthFlow('forgot1')">Forgot Password?</div>
 
         <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Login</button>
@@ -1718,6 +1737,7 @@
       </div>
       <div class="header-actions">
         <div class="btn-icon" onclick="openFeedbackModal()" title="Give Feedback">💬</div>
+        <div class="btn-icon" id="adminSalesBtn" style="display:none;" onclick="openAdminSalesOverlay()" title="Sales Analytics & Reports">📊</div>
         <div class="btn-icon" id="adminCustomersBtn" style="display:none;" onclick="openAdminCustomersOverlay()" title="Registered Customers List">👥</div>
         <div class="btn-icon" id="adminFeedbacksBtn" style="display:none;" onclick="openAdminFeedbacksOverlay()" title="Customer Feedbacks Dashboard">
           <span class="badge" id="feedbackBadge" style="display:none;">0</span>⭐
@@ -1808,6 +1828,16 @@
       <div class="btn-icon" onclick="renderAdminCustomers()">🔄</div>
     </div>
     <div class="cart-list-container" id="adminCustomersContainer"></div>
+  </div>
+
+  <!-- ADMIN SALES ANALYTICS OVERLAY -->
+  <div class="cart-page-overlay" id="adminSalesOverlay">
+    <div class="cart-page-header">
+      <div class="btn-icon" onclick="closeAdminSalesOverlay()">‹</div>
+      <span class="cart-header-title">Sales Analytics & Reports 📊</span>
+      <div class="btn-icon" onclick="renderAdminSales()">🔄</div>
+    </div>
+    <div class="cart-list-container" id="adminSalesContainer"></div>
   </div>
 
   <!-- UPLOAD GALLERY PHOTO MODAL -->
@@ -1930,7 +1960,7 @@
     <div class="cart-bottom-sheet">
       <div class="input-box-row">
         <div class="input-box-icon">👤</div>
-        <input type="text" id="custNameInput" class="custom-cart-input" placeholder="Customer Name (e.g. Rahul Sharma)" required>
+        <input type="text" id="custNameInput" class="custom-cart-input" placeholder="Customer Name (e.g. Sanket Bhoir)" required>
       </div>
 
       <div class="input-box-row">
@@ -1940,13 +1970,20 @@
 
       <div class="input-box-row">
         <div class="input-box-icon">🏷️</div>
-        <input type="text" class="custom-cart-input" placeholder="Enter your voucher code">
+        <input type="text" class="custom-cart-input" placeholder="Enter your voucher code" style="cursor:text;">
         <span style="font-size:14px; cursor:pointer; color:var(--primary-orange); font-weight:bold;">›</span>
       </div>
 
       <div class="input-box-row">
-        <div class="input-box-icon">💬</div>
-        <textarea id="orderArrivalNote" class="arrival-note-input" placeholder="Message for shopkeeper... (e.g. Will reach in 10 mins)"></textarea>
+        <div class="input-box-icon">⏱️</div>
+        <select id="orderArrivalNote" class="custom-cart-input">
+          <option value="Will reach in 5 to 10mins">Will reach in 5 to 10mins</option>
+          <option value="Will reach in 10 to 15mins">Will reach in 10 to 15mins</option>
+          <option value="Will reach in 15 to 20 mins">Will reach in 15 to 20 mins</option>
+          <option value="Will reach in 20 to 30 mins">Will reach in 20 to 30 mins</option>
+          <option value="Will reach in 30 to 45 mins">Will reach in 30 to 45 mins</option>
+          <option value="Will reach in 45 mins to 1 hour">Will reach in 45 mins to 1 hour</option>
+        </select>
       </div>
 
       <div class="summary-line">
@@ -2140,14 +2177,6 @@
               <label>Rating (1-5)</label>
               <input type="number" id="itemRating" step="0.1" min="1" max="5" placeholder="5.0">
             </div>
-            <div class="form-group" style="flex:1;">
-              <label>Card Theme</label>
-              <select id="itemTheme">
-                <option value="card-orange">Soft Orange</option>
-                <option value="card-peach">Peach Glow</option>
-                <option value="card-amber">Warm Amber</option>
-              </select>
-            </div>
           </div>
         </div>
 
@@ -2224,7 +2253,9 @@
   db.collection("orders").onSnapshot((snapshot) => {
     let newOrdersList = [];
     snapshot.forEach((doc) => {
-      newOrdersList.push(doc.data());
+      let data = doc.data();
+      data.firestoreId = doc.id;
+      newOrdersList.push(data);
     });
 
     if (previousOrderCount !== null && newOrdersList.length > previousOrderCount) {
@@ -2238,6 +2269,7 @@
     updateNotificationBadge();
     if (adminOrdersOverlay.classList.contains('active')) renderAdminOrders();
     if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
+    if (adminSalesOverlay.classList.contains('active')) renderAdminSales();
   });
 
   db.collection("users").onSnapshot((snapshot) => {
@@ -2260,13 +2292,12 @@
         localStorage.setItem('paras_categories', JSON.stringify(categories));
       }
       if (data.products) {
-        products = data.products;
+        products = data.products.map(p => ({ ...p, theme: 'card-amber' }));
         localStorage.setItem('paras_products', JSON.stringify(products));
       }
       renderCategories();
       renderProducts(document.getElementById('searchInput').value);
     } else {
-      // Initialize Firestore if not present
       syncMenuToCloud();
     }
   });
@@ -2281,6 +2312,11 @@
 
   function syncOrderToCloud(orderObj) {
     db.collection("orders").doc(orderObj.orderId).set(orderObj);
+  }
+
+  function deleteOrderFromCloud(orderId, firestoreId) {
+    let docKey = firestoreId || orderId;
+    db.collection("orders").doc(docKey).delete().catch(err => console.log("Delete cloud order error:", err));
   }
 
   function syncUserToCloud(userObj) {
@@ -2302,7 +2338,7 @@
       likesCount: 31,
       isLiked: false,
       category: "All",
-      theme: "card-orange",
+      theme: "card-amber",
       description: "Rich layered dessert bowl cake cooked to perfection.",
       flavours: [
         "Marvel Hazelnut [Cake Waffle]",
@@ -2362,7 +2398,7 @@
       likesCount: 19,
       isLiked: false,
       category: "All",
-      theme: "card-peach",
+      theme: "card-amber",
       description: "Crispy freshly baked waffle sandwich stuffed with rich fillings.",
       flavours: [
         "Marvel Hazelnut [Sandwich Waffle]",
@@ -2418,7 +2454,7 @@
       likesCount: 12,
       isLiked: false,
       category: "All",
-      theme: "card-peach",
+      theme: "card-amber",
       description: "Refreshing cold popsicles in rich artisan flavours.",
       flavours: [
         "Marvel Hazelnut [Popsi Waffle]",
@@ -2444,7 +2480,7 @@
   ];
 
   let categories = JSON.parse(localStorage.getItem('paras_categories')) || defaultCategories;
-  let products = JSON.parse(localStorage.getItem('paras_products')) || defaultProducts;
+  let products = (JSON.parse(localStorage.getItem('paras_products')) || defaultProducts).map(p => ({ ...p, theme: 'card-amber' }));
   
   let galleryQueue = JSON.parse(localStorage.getItem('paras_gallery_queue')) || [
     {
@@ -2496,6 +2532,7 @@
   let activeRecoveryUser = null;
   let generatedRecoveryCode = "";
   let collapsedDates = JSON.parse(localStorage.getItem('paras_collapsed_dates')) || {};
+  let collapsedSalesMonths = JSON.parse(localStorage.getItem('paras_collapsed_sales_months')) || {};
 
   let currentActiveProduct = null;
   let currentQty = 1;
@@ -2512,6 +2549,7 @@
   const onlinePaymentGatewayModal = document.getElementById('onlinePaymentGatewayModal');
   const adminOrdersOverlay = document.getElementById('adminOrdersOverlay');
   const adminFeedbacksOverlay = document.getElementById('adminFeedbacksOverlay');
+  const adminSalesOverlay = document.getElementById('adminSalesOverlay');
   const galleryOverlay = document.getElementById('galleryOverlay');
   const customerOrdersOverlay = document.getElementById('customerOrdersOverlay');
   const adminCustomersOverlay = document.getElementById('adminCustomersOverlay');
@@ -2528,6 +2566,7 @@
       
       const isAdmin = currentUser.role === 'admin';
       document.getElementById('editShopTitleBtn').style.display = isAdmin ? 'flex' : 'none';
+      document.getElementById('adminSalesBtn').style.display = isAdmin ? 'flex' : 'none';
       document.getElementById('adminCustomersBtn').style.display = isAdmin ? 'flex' : 'none';
       document.getElementById('adminFeedbacksBtn').style.display = isAdmin ? 'flex' : 'none';
       document.getElementById('adminOrdersBtn').style.display = isAdmin ? 'flex' : 'none';
@@ -2542,6 +2581,15 @@
       renderProducts();
     } else {
       authOverlay.classList.remove('hidden');
+      let remembered = localStorage.getItem('paras_remembered_auth');
+      if (remembered) {
+        try {
+          let parsed = JSON.parse(remembered);
+          document.getElementById('authPhone').value = parsed.identifier || '';
+          document.getElementById('authPassword').value = parsed.password || '';
+          document.getElementById('rememberMeCheckbox').checked = true;
+        } catch(e) {}
+      }
     }
   }
 
@@ -2593,7 +2641,7 @@
       signupFields.style.display = "flex";
       standardFields.style.display = "flex";
       loginFieldLabel.textContent = "Mobile Number or Username";
-      document.getElementById('authPhone').placeholder = "e.g. rahul_waffle or 9876543210";
+      document.getElementById('authPhone').placeholder = "e.g. sanket_waffle or 9821298342";
       forgotLink.style.display = "none";
     } else if (mode === 'forgot1') {
       subtitle.textContent = "Password Recovery - Step 1";
@@ -2662,6 +2710,7 @@
     e.preventDefault();
     const identifier = document.getElementById('authPhone').value.trim().toLowerCase();
     const pass = document.getElementById('authPassword').value.trim();
+    const rememberMe = document.getElementById('rememberMeCheckbox').checked;
 
     if (authMode === 'signup') {
       const name = document.getElementById('authName').value.trim();
@@ -2711,6 +2760,12 @@
       }
     }
 
+    if (rememberMe) {
+      localStorage.setItem('paras_remembered_auth', JSON.stringify({ identifier, password: pass }));
+    } else {
+      localStorage.removeItem('paras_remembered_auth');
+    }
+
     document.getElementById('authForm').reset();
     checkAuthState();
   }
@@ -2746,6 +2801,7 @@
     if (adminOrdersOverlay.classList.contains('active')) renderAdminOrders();
     if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
     if (adminCustomersOverlay.classList.contains('active')) renderAdminCustomers();
+    if (adminSalesOverlay.classList.contains('active')) renderAdminSales();
   });
 
   function updateNotificationBadge() {
@@ -3042,7 +3098,7 @@
     filtered.forEach((product) => {
       const globalIndex = products.findIndex(p => p.name === product.name);
       const card = document.createElement('div');
-      card.className = `hero-card ${product.theme || 'card-peach'}`;
+      card.className = `hero-card card-amber`;
       card.onclick = () => openProductDetail(product);
 
       card.innerHTML = `
@@ -3197,6 +3253,97 @@
         </div>
       `;
       container.appendChild(card);
+    });
+  }
+
+  function openAdminSalesOverlay() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    renderAdminSales();
+    adminSalesOverlay.classList.add('active');
+  }
+
+  function closeAdminSalesOverlay() {
+    adminSalesOverlay.classList.remove('active');
+  }
+
+  function toggleSalesMonthCollapse(monthStr) {
+    collapsedSalesMonths[monthStr] = !collapsedSalesMonths[monthStr];
+    localStorage.setItem('paras_collapsed_sales_months', JSON.stringify(collapsedSalesMonths));
+    renderAdminSales();
+  }
+
+  function renderAdminSales() {
+    orderQueue = JSON.parse(localStorage.getItem('paras_order_queue')) || orderQueue;
+    const container = document.getElementById('adminSalesContainer');
+    container.innerHTML = '';
+
+    if (orderQueue.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:#9a3412; font-weight:700;">No sales records found yet!</div>`;
+      return;
+    }
+
+    let salesByMonth = {};
+    orderQueue.forEach(order => {
+      let dateStr = order.date || 'Today';
+      let monthStr = "Sep 2026";
+      let parts = dateStr.split(' ');
+      if (parts.length >= 3) {
+        monthStr = `${parts[1]} ${parts[2]}`;
+      } else if (parts.length === 2) {
+        monthStr = `${parts[0]} ${parts[1]}`;
+      }
+
+      if (!salesByMonth[monthStr]) salesByMonth[monthStr] = { totalAmount: 0, totalOrders: 0, days: {} };
+      salesByMonth[monthStr].totalAmount += (order.totalAmount || 0);
+      salesByMonth[monthStr].totalOrders += 1;
+
+      if (!salesByMonth[monthStr].days[dateStr]) {
+        salesByMonth[monthStr].days[dateStr] = { totalAmount: 0, totalOrders: 0, orders: [] };
+      }
+      salesByMonth[monthStr].days[dateStr].totalAmount += (order.totalAmount || 0);
+      salesByMonth[monthStr].days[dateStr].totalOrders += 1;
+      salesByMonth[monthStr].days[dateStr].orders.push(order);
+    });
+
+    Object.keys(salesByMonth).forEach(monthKey => {
+      let monthData = salesByMonth[monthKey];
+      let isCollapsed = collapsedSalesMonths[monthKey] || false;
+
+      let monthHeader = document.createElement('div');
+      monthHeader.className = 'date-group-header';
+      monthHeader.style.background = '#ffedd5';
+      monthHeader.innerHTML = `
+        <span>📊 Month: <b>${monthKey}</b> | Total Sell: ₹${monthData.totalAmount} (${monthData.totalOrders} Orders)</span>
+        <span>${isCollapsed ? '▶ Expand' : '▼ Minimize'}</span>
+      `;
+      monthHeader.onclick = () => toggleSalesMonthCollapse(monthKey);
+      container.appendChild(monthHeader);
+
+      let monthWrapper = document.createElement('div');
+      monthWrapper.style.display = isCollapsed ? 'none' : 'flex';
+      monthWrapper.style.flexDirection = 'column';
+      monthWrapper.style.gap = '10px';
+      monthWrapper.style.marginBottom = '12px';
+      monthWrapper.style.paddingLeft = '10px';
+
+      Object.keys(monthData.days).forEach(dateKey => {
+        let dayData = monthData.days[dateKey];
+        let dayCard = document.createElement('div');
+        dayCard.className = 'order-card-admin';
+        dayCard.style.background = '#fffbeb';
+        dayCard.innerHTML = `
+          <div class="order-header-line">
+            <span style="font-weight:900; color:#7c2d12;">📅 Date: ${dateKey}</span>
+            <span class="status-badge status-ready">₹${dayData.totalAmount} (${dayData.totalOrders} Orders)</span>
+          </div>
+          <div style="font-size:12px; color:#1f2937; display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+            ${dayData.orders.map(o => `<div>• ${o.orderId} - ${o.customerName} - ₹${o.totalAmount} (${o.status})</div>`).join('')}
+          </div>
+        `;
+        monthWrapper.appendChild(dayCard);
+      });
+
+      container.appendChild(monthWrapper);
     });
   }
 
@@ -3694,7 +3841,7 @@
     const formattedTime = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const totalAmount = cartItems.reduce((sum, i) => sum + (i.unitPrice * i.qty), 0);
-    const note = document.getElementById('orderArrivalNote').value.trim();
+    const note = document.getElementById('orderArrivalNote').value;
 
     const paymentMethodLabel = selectedPaymentType === 'online' ? 'Online UPI (vjsanket@okhdfcbank)' : 'Pay Direct at Shop / Cash';
     const initialStatus = selectedPaymentType === 'online' ? 'Online Payment Pending' : 'Pending';
@@ -3750,7 +3897,6 @@
     cartItems = [];
     document.getElementById('custNameInput').value = '';
     document.getElementById('custPhoneInput').value = '';
-    document.getElementById('orderArrivalNote').value = '';
     updateCartBadge();
     closeCartPage();
 
@@ -3967,7 +4113,7 @@
             💳 Payment Mode: ${order.paymentMethod || 'Pay at Shop'}
           </div>
 
-          ${order.note ? `<div style="font-size:11px; color:#c2410c; background:#ffedd5; padding:6px; border-radius:8px;">💬 Note: ${order.note}</div>` : ''}
+          ${order.note ? `<div style="font-size:11px; color:#c2410c; background:#ffedd5; padding:6px; border-radius:8px;">💬 Arrival Time: ${order.note}</div>` : ''}
 
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
             <span style="font-size:14px; font-weight:900; color:#7c2d12;">Total: ₹${order.totalAmount}</span>
@@ -3977,6 +4123,7 @@
             <button class="btn-status-toggle btn-status-prep ${statusText === 'Preparing' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Preparing')">⏳ Preparing</button>
             <button class="btn-status-toggle btn-status-ready ${statusText === 'Ready' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Ready')">🔔 Ready</button>
             <button class="btn-status-toggle btn-status-paid ${statusText === 'Paid' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Paid')">💳 Paid</button>
+            <button class="btn-remove-order" onclick="removeAdminOrder(${globalIndex})" title="Remove Order">🗑️ Delete</button>
           </div>
         `;
         groupWrapper.appendChild(card);
@@ -3984,6 +4131,17 @@
 
       container.appendChild(groupWrapper);
     });
+  }
+
+  function removeAdminOrder(index) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    const order = orderQueue[index];
+    if (confirm(`Are you sure you want to remove order ${order.orderId}?`)) {
+      orderQueue.splice(index, 1);
+      saveOrdersToStorage();
+      deleteOrderFromCloud(order.orderId, order.firestoreId);
+      renderAdminOrders();
+    }
   }
 
   function changeOrderStatus(index, newStatus) {
@@ -4046,7 +4204,6 @@
     document.getElementById('itemDescription').value = p.description || '';
     document.getElementById('itemCategory').value = p.category || 'All';
     document.getElementById('itemRating').value = p.rating;
-    document.getElementById('itemTheme').value = p.theme || 'card-peach';
   }
 
   function editCategory(index) {
@@ -4085,7 +4242,7 @@
     if (confirm("Delete " + products[index].name + "?")) {
       products.splice(index, 1);
       saveDataLocally();
-      renderProducts(document.getElementById('searchInput').value);
+      renderProducts(document.getElementById('searchInput'.value));
     }
   }
 
@@ -4106,7 +4263,6 @@
         const description = document.getElementById('itemDescription').value.trim();
         const category = document.getElementById('itemCategory').value;
         const rating = document.getElementById('itemRating').value.trim() || "5.0";
-        const theme = document.getElementById('itemTheme').value;
 
         const productObj = {
           name,
@@ -4115,7 +4271,7 @@
             likesCount: index > -1 ? products[index].likesCount : 0,
             isLiked: index > -1 ? products[index].isLiked : false,
             category,
-            theme,
+            theme: 'card-amber',
             description,
             flavours,
             image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
@@ -4137,7 +4293,7 @@
           if (index > -1) {
             const oldName = categories[index].name;
             categories[index] = categoryObj;
-            products.forEach(p => {
+            products.products?.forEach(p => {
               if (p.category === oldName) p.category = catName;
             });
           } else {
@@ -4148,17 +4304,72 @@
         saveDataLocally();
         closeModal();
         renderCategories();
-        renderProducts(document.getElementById('searchInput').value);
+        renderProducts(document.getElementById('searchInput'.value));
       };
 
       if (imgFile) {
         compressImage(imgFile, 400, 0.7, (compressedUrl) => {
-          handleSave(compressedUrl);
+          handleDataSave(compressedUrl);
         });
       } else {
         handleSave(null);
       }
     });
+
+    function handleDataSave(imgUrl) {
+      const type = document.getElementById('editType').value;
+      const index = parseInt(document.getElementById('editIndex').value);
+      if (type === 'product') {
+        const name = document.getElementById('itemName').value.trim();
+        const fixedPrice = document.getElementById('fixedPrice').value.trim();
+        const flavoursStr = document.getElementById('itemFlavours').value.trim();
+        const flavours = flavoursStr ? flavoursStr.split(',').map(f => f.trim()).filter(f => f) : [];
+        const description = document.getElementById('itemDescription').value.trim();
+        const category = document.getElementById('itemCategory').value;
+        const rating = document.getElementById('itemRating').value.trim() || "5.0";
+
+        const productObj = {
+          name,
+          fixedPrice,
+          rating,
+          likesCount: index > -1 ? products[index].likesCount : 0,
+          isLiked: index > -1 ? products[index].isLiked : false,
+          category,
+          theme: 'card-amber',
+          description,
+          flavours,
+          image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
+        };
+
+        if (index > -1) {
+          products[index] = productObj;
+        } else {
+          products.push(productObj);
+        }
+      } else {
+        const catName = document.getElementById('catName').value.trim();
+        if (!catName) return;
+        const categoryObj = {
+          name: catName,
+          img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
+        };
+
+        if (index > -1) {
+          const oldName = categories[index].name;
+          categories[index] = categoryObj;
+          products.forEach(p => {
+            if (p.category === oldName) p.category = catName;
+          });
+        } else {
+          categories.push(categoryObj);
+        }
+      }
+
+      saveDataLocally();
+      closeModal();
+      renderCategories();
+      renderProducts(document.getElementById('searchInput'.value));
+    }
 
     // Initial Boot
     loadShopTitle();
