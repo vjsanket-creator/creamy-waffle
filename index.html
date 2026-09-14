@@ -1689,7 +1689,7 @@
 
       <div id="standardAuthFields" style="display:flex; flex-direction:column; gap:8px;">
         <div class="auth-input-group">
-          <label id="phoneEmailLabel">Mobile Number</label>
+          <label id="phoneEmailLabel">Mobile Number or Username</label>
           <div class="input-wrapper">
             <input type="text" id="authPhone" class="no-icon" placeholder="Enter mobile number or username" required>
           </div>
@@ -1703,7 +1703,7 @@
           </div>
         </div>
 
-        <label class="auth-checkbox-row" id="rememberMeRow">
+        <label class="auth-checkbox-row" id="rememberMeRow" style="display:none;">
           <input type="checkbox" id="rememberMeCheckbox">
           <span>Remember Me (Keep me logged in)</span>
         </label>
@@ -1965,7 +1965,7 @@
 
       <div class="input-box-row">
         <div class="input-box-icon">📞</div>
-        <input type="tel" id="custPhoneInput" class="custom-cart-input" placeholder="Contact Number (10 digit)" required>
+        <input type="tel" id="custPhoneInput" class="custom-cart-input" placeholder="Mobile Number" required>
       </div>
 
       <div class="input-box-row">
@@ -2238,6 +2238,7 @@
     }
   }
 
+  // REAL-TIME CLOUD LISTENER FOR ORDERS
   db.collection("orders").onSnapshot((snapshot) => {
     let newOrdersList = [];
     snapshot.forEach((doc) => {
@@ -2253,6 +2254,7 @@
     }
     previousOrderCount = newOrdersList.length;
     orderQueue = newOrdersList;
+    localStorage.setItem('paras_order_queue', JSON.stringify(orderQueue));
 
     updateNotificationBadge();
     if (adminOrdersOverlay.classList.contains('active')) renderAdminOrders();
@@ -2260,15 +2262,24 @@
     if (adminSalesOverlay.classList.contains('active')) renderAdminSales();
   });
 
+  // REAL-TIME CLOUD LISTENER FOR USERS / CUSTOMERS (SYNCED ACROSS ALL DEVICES)
   db.collection("users").onSnapshot((snapshot) => {
     let cloudUsers = [];
     snapshot.forEach((doc) => {
       cloudUsers.push(doc.data());
     });
-    if (cloudUsers.length > 0) {
-      registeredUsers = cloudUsers;
-      localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+    
+    // Ensure admin account always exists
+    let hasAdmin = cloudUsers.some(u => u.role === 'admin');
+    if (!hasAdmin) {
+      let defaultAdmin = { name: "Admin Shopkeeper", username: "admin", phone: "9999999999", email: "admin@creamywaffle.com", pass: "admin123", role: "admin" };
+      cloudUsers.push(defaultAdmin);
+      db.collection("users").doc("admin").set(defaultAdmin);
     }
+
+    registeredUsers = cloudUsers;
+    localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+    if (adminCustomersOverlay.classList.contains('active')) renderAdminCustomers();
   });
 
   // REAL-TIME CLOUD SYNC FOR MENU & CATEGORIES ACROSS ALL DEVICES / USERS
@@ -2280,7 +2291,7 @@
         localStorage.setItem('paras_categories', JSON.stringify(categories));
       }
       if (data.products) {
-        products = data.products.map(p => ({ ...p, theme: ' card-amber', likesCount: p.likesCount !== undefined ? p.likesCount : 0 }));
+        products = data.products.map(p => ({ ...p, theme: 'card-amber', likesCount: p.likesCount !== undefined ? p.likesCount : 0 }));
         localStorage.setItem('paras_products', JSON.stringify(products));
       }
       renderCategories();
@@ -2308,7 +2319,8 @@
   }
 
   function syncUserToCloud(userObj) {
-    db.collection("users").doc(userObj.username || userObj.phone).set(userObj);
+    let docKey = (userObj.username || userObj.phone || userObj.email || '').replace(/[\/]/g, '_');
+    db.collection("users").doc(docKey).set(userObj).catch(err => console.log("Sync user error:", err));
   }
 
   const DEFAULT_LOGO = "Creamy Waffle Logo_HighRes.jpg";
@@ -2509,12 +2521,6 @@
     { name: "Admin Shopkeeper", username: "admin", phone: "9999999999", email: "admin@creamywaffle.com", pass: "admin123", role: "admin" }
   ];
 
-  let adminRecord = registeredUsers.find(u => u.role === 'admin');
-  if (adminRecord && !adminRecord.username) {
-    adminRecord.username = "admin";
-    localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
-  }
-
   let currentUser = JSON.parse(localStorage.getItem('paras_current_user')) || null;
   let authMode = "login";
   let activeRecoveryUser = null;
@@ -2569,17 +2575,6 @@
       renderProducts();
     } else {
       authOverlay.classList.remove('hidden');
-      let remembered = localStorage.getItem('paras_remembered_auth');
-      if (remembered) {
-        try {
-          let parsed = JSON.parse(remembered);
-          document.getElementById('authPhone').value = parsed.identifier || '';
-          document.getElementById('authPassword').value = parsed.password || '';
-          document.getElementById('rememberMeCheckbox').checked = true;
-        } catch(e) {}
-      } else {
-        document.getElementById('rememberMeCheckbox').checked = false;
-      }
     }
   }
 
@@ -2621,10 +2616,10 @@
       switchText.innerHTML = "Don't have an account? <b>Sign Up</b>";
       switchText.style.display = "block";
       standardFields.style.display = "flex";
-      loginFieldLabel.textContent = "Mobile Number";
+      loginFieldLabel.textContent = "Mobile Number or Username";
       document.getElementById('authPhone').placeholder = "Enter mobile number or username";
       forgotLink.style.display = "block";
-      rememberMeRow.style.display = "flex";
+      rememberMeRow.style.display = "none";
     } else if (mode === 'signup') {
       subtitle.textContent = "Create a new customer account";
       submitBtn.textContent = "Sign Up";
@@ -2705,7 +2700,6 @@
     e.preventDefault();
     const identifier = document.getElementById('authPhone').value.trim().toLowerCase();
     const pass = document.getElementById('authPassword').value.trim();
-    const rememberMe = document.getElementById('rememberMeCheckbox').checked;
 
     if (authMode === 'signup') {
       const name = document.getElementById('authName').value.trim();
@@ -2719,7 +2713,7 @@
       }
       const existing = registeredUsers.find(u => u.username === username || u.phone === phone || u.email === email);
       if (existing) {
-        alert("Username, Mobile number or Email ID already registered! Please login.");
+        alert("Username, Mobile number or Email ID already registered! Please login directly.");
         return;
       }
       const newUser = { name, username, email, phone, pass, role: "customer" };
@@ -2736,6 +2730,7 @@
           adminUser = { name: "Admin Shopkeeper", username: "admin", phone: "9999999999", email: "admin@creamywaffle.com", pass: "admin123", role: "admin" };
           registeredUsers.push(adminUser);
           localStorage.setItem('paras_users', JSON.stringify(registeredUsers));
+          syncUserToCloud(adminUser);
         }
         currentUser = adminUser;
         localStorage.setItem('paras_current_user', JSON.stringify(currentUser));
@@ -2753,12 +2748,6 @@
           return;
         }
       }
-    }
-
-    if (rememberMe) {
-      localStorage.setItem('paras_remembered_auth', JSON.stringify({ identifier, password: pass }));
-    } else {
-      localStorage.removeItem('paras_remembered_auth');
     }
 
     document.getElementById('authForm').reset();
@@ -3225,7 +3214,7 @@
     const container = document.getElementById('adminCustomersContainer');
     container.innerHTML = '';
 
-    const usersList = JSON.parse(localStorage.getItem('paras_users')) || [];
+    const usersList = JSON.parse(localStorage.getItem('paras_users')) || registeredUsers;
     const customers = usersList.filter(u => u.role !== 'admin');
 
     if (customers.length === 0) {
@@ -3955,15 +3944,17 @@
     renderAdminFeedbacks();
   }
 
-  function saveFeedbackReply(index) {
+  function submitAdminReply(index) {
     if (!currentUser || currentUser.role !== 'admin') return;
-    const inputField = document.getElementById(`replyInput_${index}`);
-    const replyText = inputField.value.trim();
-    if (replyText) {
-      feedbackQueue[index].reply = replyText;
-      saveOrdersToStorage();
-      renderAdminFeedbacks();
+    const inputVal = document.getElementById(`replyInput_${index}`).value.trim();
+    if (!inputVal) {
+      alert("Please enter reply text!");
+      return;
     }
+    feedbackQueue[index].reply = inputVal;
+    saveOrdersToStorage();
+    renderAdminFeedbacks();
+    alert("✅ Owner reply submitted!");
   }
 
   function openAdminFeedbacksOverlay() {
@@ -3974,56 +3965,49 @@
 
   function closeAdminFeedbacksOverlay() { adminFeedbacksOverlay.classList.remove('active'); }
 
-  function openAdminOrdersOverlay() {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    renderAdminOrders();
-    adminOrdersOverlay.classList.add('active');
-  }
-
-  function closeAdminOrdersOverlay() { adminOrdersOverlay.classList.remove('active'); }
-
   function renderAdminFeedbacks() {
+    feedbackQueue = JSON.parse(localStorage.getItem('paras_feedback_queue')) || feedbackQueue;
     const container = document.getElementById('adminFeedbacksContainer');
     container.innerHTML = '';
 
     if (feedbackQueue.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:40px; color:#9a3412; font-weight:700;">No customer feedbacks yet!</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:#9a3412; font-weight:700;">No customer feedback received yet!</div>`;
       return;
     }
 
     feedbackQueue.forEach((fb, index) => {
       const card = document.createElement('div');
       card.className = 'feedback-card-admin';
-
       card.innerHTML = `
         <div class="order-header-line">
-          <span style="font-weight:800; color:#7c2d12;">👤 ${fb.name}</span>
-          <button class="btn-action-badge btn-delete" onclick="deleteFeedback(${index})">✕</button>
+          <span style="font-weight:900; color:#7c2d12;">👤 ${fb.name}</span>
+          <span style="font-size:11px; color:#9a3412;">🕒 ${fb.timestamp}</span>
         </div>
-        <div style="font-size:12px; font-weight:800; color:#d97706;">${fb.rating}</div>
-        <div style="font-size:13px; color:#1f2937; line-height:1.4;">"${fb.text}"</div>
-        <div style="font-size:10px; color:#9a3412; text-align:right;">🕒 ${fb.timestamp}</div>
+        <div style="font-size:12px; font-weight:800; color:var(--primary-orange);">${fb.rating}</div>
+        <div style="font-size:12px; color:#1f2937; line-height:1.4;">${fb.text}</div>
 
-        ${fb.reply ? `<div class="owner-reply-box">💬 <b>Shop Reply:</b> ${fb.reply}</div>` : ''}
+        ${fb.reply ? `<div class="owner-reply-box">👑 Owner Reply: ${fb.reply}</div>` : ''}
 
         <div class="feedback-actions-bar">
-          <button class="feedback-like-btn ${fb.isLiked ? 'liked' : ''}" onclick="toggleFeedbackLike(${index})">
+          <button class="feedback-like-btn ${fb.isLiked ? 'liked' : ''}" onclick="toggleFeedbackLike(${index})" title="Like Feedback">
             ❤️ ${fb.isLiked ? 'Liked' : 'Like'}
           </button>
+          
           <div class="feedback-reply-area">
-            <div class="shop-smiley-row">
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '😊')">😊</button>
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '😍')">😍</button>
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '😋')">😋</button>
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '🥳')">🥳</button>
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '❤️')">❤️</button>
-              <button type="button" class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '👍')">👍</button>
-            </div>
             <div class="feedback-comment-box">
-              <input type="text" id="replyInput_${index}" class="feedback-comment-input" placeholder="Write reply..." value="${fb.reply || ''}">
-              <button class="feedback-comment-submit" onclick="saveFeedbackReply(${index})">Post</button>
+              <input type="text" id="replyInput_${index}" class="feedback-comment-input" placeholder="Type reply as owner...">
+              <button class="feedback-comment-submit" onclick="submitAdminReply(${index})">Reply</button>
+            </div>
+            <div class="shop-smiley-row">
+              <button class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '😊')">😊</button>
+              <button class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '❤️')">❤️</button>
+              <button class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '😋')">😋</button>
+              <button class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '🙏')">🙏</button>
+              <button class="shop-smiley-btn" onclick="insertShopSmiley(${index}, '⭐')">⭐</button>
             </div>
           </div>
+
+          <button class="btn-action-badge btn-delete" onclick="deleteFeedback(${index})" title="Delete">✕</button>
         </div>
       `;
       container.appendChild(card);
@@ -4036,46 +4020,54 @@
     renderAdminOrders();
   }
 
+  function openAdminOrdersOverlay() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    renderAdminOrders();
+    adminOrdersOverlay.classList.add('active');
+  }
+
+  function closeAdminOrdersOverlay() { adminOrdersOverlay.classList.remove('active'); }
+
   function renderAdminOrders() {
+    orderQueue = JSON.parse(localStorage.getItem('paras_order_queue')) || orderQueue;
     const container = document.getElementById('adminOrdersContainer');
     container.innerHTML = '';
 
     if (orderQueue.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:40px; color:#9a3412; font-weight:600;">No active orders in queue!</div>';
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:#9a3412; font-weight:700;">No live orders in queue!</div>`;
       return;
     }
 
-    orderQueue.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-    const groupedByDate = {};
+    let groupedByDate = {};
     orderQueue.forEach((order) => {
-      const orderDate = order.date || 'Today';
-      if (!groupedByDate[orderDate]) groupedByDate[orderDate] = [];
-      groupedByDate[orderDate].push(order);
+      let dKey = order.date || 'Today';
+      if (!groupedByDate[dKey]) groupedByDate[dKey] = [];
+      groupedByDate[dKey].push(order);
     });
 
-    Object.keys(groupedByDate).forEach((dateStr) => {
-      const ordersInDate = groupedByDate[dateStr];
-      const isCollapsed = collapsedDates[dateStr] || false;
+    Object.keys(groupedByDate).forEach(dateKey => {
+      let ordersList = groupedByDate[dateKey];
+      ordersList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      let isCollapsed = collapsedDates[dateKey] || false;
 
-      const dateHeader = document.createElement('div');
+      let dateHeader = document.createElement('div');
       dateHeader.className = 'date-group-header';
       dateHeader.innerHTML = `
-        <span>📅 Orders for ${dateStr} (${ordersInDate.length})</span>
+        <span>📅 Date: <b>${dateKey}</b> (${ordersList.length} Orders)</span>
         <span>${isCollapsed ? '▶ Expand' : '▼ Minimize'}</span>
       `;
-      dateHeader.onclick = () => toggleDateCollapse(dateStr);
+      dateHeader.onclick = () => toggleDateCollapse(dateKey);
       container.appendChild(dateHeader);
 
-      const groupWrapper = document.createElement('div');
-      groupWrapper.style.display = isCollapsed ? 'none' : 'flex';
-      groupWrapper.style.flexDirection = 'column';
-      groupWrapper.style.gap = '12px';
-      groupWrapper.style.marginBottom = '12px';
+      let dateContainer = document.createElement('div');
+      dateContainer.style.display = isCollapsed ? 'none' : 'flex';
+      dateContainer.style.flexDirection = 'column';
+      dateContainer.style.gap = '12px';
+      dateContainer.style.marginBottom = '14px';
+      dateContainer.style.paddingLeft = '6px';
 
-      ordersInDate.forEach((order) => {
-        const globalIndex = orderQueue.findIndex(o => o.orderId === order.orderId);
-        const sequenceNo = String(globalIndex + 1).padStart(2, '0');
+      ordersList.forEach((order) => {
+        const orderGlobalIndex = orderQueue.findIndex(o => o.orderId === order.orderId);
         let itemsSummary = order.items.map(i => `• ${i.name} (${i.selectedFlavour}) x${i.qty} - [${i.orderType}]`).join('<br>');
         
         let statusClass = 'status-pending';
@@ -4083,105 +4075,93 @@
         if (statusText === 'Preparing') statusClass = 'status-preparing';
         if (statusText === 'Ready') statusClass = 'status-ready';
         if (statusText === 'Paid') statusClass = 'status-paid';
+        if (statusText === 'Online Payment Pending') statusClass = 'status-pending';
 
         const card = document.createElement('div');
         card.className = 'order-card-admin';
-
         card.innerHTML = `
           <div class="order-header-line">
             <div>
-              <span class="seq-number-badge">${sequenceNo}</span>
+              <span class="seq-number-badge">${order.numericId}</span>
               <span class="order-serial">${order.orderId}</span>
               <span class="status-badge ${statusClass}" style="margin-left:6px;">${statusText}</span>
             </div>
-            <span class="order-time">🕒 ${order.date}, ${order.time}</span>
+            <span class="order-time">🕒 ${order.time}</span>
           </div>
 
           <div class="customer-info-box">
-            <span>👤 ${order.customerName || 'Guest'}</span>
-            <span>📞 ${order.customerPhone || 'N/A'}</span>
+            <span>👤 ${order.customerName}</span>
+            <span>📞 ${order.customerPhone}</span>
           </div>
 
           <div class="order-items-list">${itemsSummary}</div>
 
           <div style="font-size:11px; font-weight:800; color:#9a3412; background:#ffedd5; padding:4px 8px; border-radius:6px;">
-            💳 Payment Mode: ${order.paymentMethod || 'Pay at Shop'}
+            💳 Payment: ${order.paymentMethod}
           </div>
 
-          ${order.note ? `<div style="font-size:11px; color:#c2410c; background:#ffedd5; padding:6px; border-radius:8px;">💬 Arrival Time: ${order.note}</div>` : ''}
+          ${order.note ? `<div style="font-size:11px; color:#c2410c; background:#ffedd5; padding:6px; border-radius:8px;">💬 Note: ${order.note}</div>` : ''}
 
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
             <span style="font-size:14px; font-weight:900; color:#7c2d12;">Total: ₹${order.totalAmount}</span>
           </div>
 
           <div class="admin-action-row">
-            <button class="btn-status-toggle btn-status-prep ${statusText === 'Preparing' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Preparing')">⏳ Preparing</button>
-            <button class="btn-status-toggle btn-status-ready ${statusText === 'Ready' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Ready')">🔔 Ready</button>
-            <button class="btn-status-toggle btn-status-paid ${statusText === 'Paid' ? 'glowing' : ''}" onclick="changeOrderStatus(${globalIndex}, 'Paid')">💳 Paid</button>
-            <button class="btn-remove-order" onclick="removeAdminOrder(${globalIndex})" title="Remove Order">🗑️ Delete</button>
+            <button class="btn-status-toggle btn-status-prep ${statusText === 'Preparing' ? 'glowing' : ''}" onclick="updateOrderStatus(${orderGlobalIndex}, 'Preparing')">Preparing</button>
+            <button class="btn-status-toggle btn-status-ready ${statusText === 'Ready' ? 'glowing' : ''}" onclick="updateOrderStatus(${orderGlobalIndex}, 'Ready')">Ready</button>
+            <button class="btn-status-toggle btn-status-paid ${statusText === 'Paid' ? 'glowing' : ''}" onclick="updateOrderStatus(${orderGlobalIndex}, 'Paid')">Paid</button>
+            <button class="btn-remove-order" onclick="removeOrder(${orderGlobalIndex})">Delete</button>
           </div>
         `;
-        groupWrapper.appendChild(card);
+        dateContainer.appendChild(card);
       });
 
-      container.appendChild(groupWrapper);
+      container.appendChild(dateContainer);
     });
   }
 
-  function removeAdminOrder(index) {
+  function updateOrderStatus(index, newStatus) {
     if (!currentUser || currentUser.role !== 'admin') return;
-    const order = orderQueue[index];
-    if (confirm(`Are you sure you want to remove order ${order.orderId}?`)) {
-      orderQueue.splice(index, 1);
-      saveOrdersToStorage();
-      deleteOrderFromCloud(order.orderId, order.firestoreId);
-      renderAdminOrders();
-    }
+    orderQueue[index].status = newStatus;
+    saveOrdersToStorage();
+    syncOrderToCloud(orderQueue[index]);
+    renderAdminOrders();
+    if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
   }
 
-  function changeOrderStatus(index, newStatus) {
-    const order = orderQueue[index];
-    order.status = newStatus;
-    saveOrdersToStorage();
-    syncOrderToCloud(order);
-    renderAdminOrders();
-
-    const cleanPhone = (order.customerPhone || '').replace(/[^0-9]/g, '');
-    if (!cleanPhone) return;
-
-    let waMessageText = '';
-    if (newStatus === 'Preparing') {
-      waMessageText = `Hello ${order.customerName}! Your order ${order.orderId} at Creamy Waffle is currently being prepared fresh in our kitchen! 👨‍🍳🔥`;
-    } else if (newStatus === 'Ready') {
-      waMessageText = `Hello ${order.customerName}! Your order ${order.orderId} at Creamy Waffle is now READY for pickup/serving! 🧇✨`;
-    } else if (newStatus === 'Paid') {
-      waMessageText = `Hello ${order.customerName}! Thank you for visiting Creamy Waffle! We received your payment. Enjoy your treats! 🧇❤️✨`;
-    }
-
-    if (waMessageText) {
-      const encodedWaMsg = encodeURIComponent(waMessageText);
-      const waUrl = `https://wa.me/91${cleanPhone}?text=${encodedWaMsg}`;
-      window.open(waUrl, '_blank');
+  function removeOrder(index) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    if (confirm("Delete this order from queue?")) {
+      let removedOrder = orderQueue[index];
+      orderQueue.splice(index, 1);
+      saveOrdersToStorage();
+      deleteOrderFromCloud(removedOrder.orderId, removedOrder.firestoreId);
+      renderAdminOrders();
+      if (customerOrdersOverlay.classList.contains('active')) renderCustomerOrders();
     }
   }
 
   function openModal(type) {
     if (!currentUser || currentUser.role !== 'admin') return;
     document.getElementById('editType').value = type;
-    document.getElementById('editIndex').value = "-1";
     document.getElementById('unifiedForm').reset();
-    const imgInput = document.getElementById('imageInput');
-    imgInput.value = "";
+    document.getElementById('editIndex').value = "-1";
+
+    const productFields = document.getElementById('productFields');
+    const categoryFields = document.getElementById('categoryFields');
+    const modalTitle = document.getElementById('modalTitle');
 
     if (type === 'product') {
-      document.getElementById('modalTitle').textContent = "Add New Product";
-      document.getElementById('productFields').style.display = "block";
-      document.getElementById('categoryFields').style.display = "none";
+      productFields.style.display = 'block';
+      categoryFields.style.display = 'none';
+      modalTitle.textContent = "Add New Product";
+      renderCategories();
     } else {
-      document.getElementById('modalTitle').textContent = "Add New Category";
-      document.getElementById('productFields').style.display = "none";
-      document.getElementById('categoryFields').style.display = "block";
+      productFields.style.display = 'none';
+      categoryFields.style.display = 'block';
+      modalTitle.textContent = "Add New Category";
     }
+
     modalOverlay.classList.add('active');
   }
 
@@ -4189,189 +4169,146 @@
 
   function editProduct(index) {
     if (!currentUser || currentUser.role !== 'admin') return;
-    openModal('product');
     const p = products[index];
-    document.getElementById('modalTitle').textContent = "Edit Product: " + p.name;
+    document.getElementById('editType').value = 'product';
     document.getElementById('editIndex').value = index;
+    document.getElementById('modalTitle').textContent = "Edit Product";
+
+    document.getElementById('productFields').style.display = 'block';
+    document.getElementById('categoryFields').style.display = 'none';
+
     document.getElementById('itemName').value = p.name;
-    document.getElementById('fixedPrice').value = p.fixedPrice || '';
+    document.getElementById('pricingType').value = 'fixed';
+    document.getElementById('fixedPrice').value = p.fixedPrice;
     document.getElementById('itemFlavours').value = (p.flavours || []).join(', ');
-    document.getElementById('itemDescription').value = p.description || '';
-    document.getElementById('itemCategory').value = p.category || 'All';
+    document.getElementById('itemDescription').value = p.description || "";
     document.getElementById('itemRating').value = p.rating;
-  }
+    
+    renderCategories();
+    document.getElementById('itemCategory').value = p.category;
 
-  function editCategory(index) {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    openModal('category');
-    const c = categories[index];
-    document.getElementById('modalTitle').textContent = "Edit Category: " + c.name;
-    document.getElementById('editIndex').value = index;
-    document.getElementById('catName').value = c.name;
-  }
-
-  function deleteCategory(index) {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    const c = categories[index];
-    if (confirm("Delete category '" + c.name + "'?")) {
-      categories.splice(index, 1);
-      if (selectedCategory === c.name) selectedCategory = "All";
-      saveDataLocally();
-      renderCategories();
-      renderProducts(document.getElementById('searchInput').value);
-    }
-  }
-
-  function rateProduct(index) {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    const newRating = prompt("Enter new rating for " + products[index].name + " (1 to 5):", products[index].rating);
-    if (newRating && !isNaN(newRating) && newRating >= 1 && newRating <= 5) {
-      products[index].rating = parseFloat(newRating).toFixed(1);
-      saveDataLocally();
-      renderProducts(document.getElementById('searchInput'.value));
-    }
+    modalOverlay.classList.add('active');
   }
 
   function deleteProduct(index) {
     if (!currentUser || currentUser.role !== 'admin') return;
-    if (confirm("Delete " + products[index].name + "?")) {
+    if (confirm(`Delete product "${products[index].name}"?`)) {
       products.splice(index, 1);
       saveDataLocally();
-      renderProducts(document.getElementById('searchInput'.value));
+      renderProducts(document.getElementById('searchInput').value);
+    }
+  }
+
+  function editCategory(index) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    const cat = categories[index];
+    if (cat.name === "All") {
+      alert("Cannot edit 'All' category!");
+      return;
+    }
+    const newName = prompt("Enter new category name:", cat.name);
+    if (newName && newName.trim() !== '') {
+      const trimmed = newName.trim();
+      const oldName = cat.name;
+      cat.name = trimmed;
+      products.forEach(p => {
+        if (p.category === oldName) p.category = trimmed;
+      });
+      saveDataLocally();
+      renderCategories();
+      renderProducts();
+    }
+  }
+
+  function deleteCategory(index) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    const cat = categories[index];
+    if (cat.name === "All") {
+      alert("Cannot delete 'All' category!");
+      return;
+    }
+    if (confirm(`Delete category "${cat.name}" and all its products?`)) {
+      products = products.filter(p => p.category !== cat.name);
+      categories.splice(index, 1);
+      selectedCategory = "All";
+      saveDataLocally();
+      renderCategories();
+      renderProducts();
     }
   }
 
   document.getElementById('unifiedForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    if (!currentUser || currentUser.role !== 'admin') return;
-
     const type = document.getElementById('editType').value;
-    const index = parseInt(document.getElementById('editIndex').value);
-    const imgFile = document.getElementById('imageInput').files[0];
+    const editIdx = parseInt(document.getElementById('editIndex').value);
+    const fileInput = document.getElementById('imageInput').files[0];
 
-    const handleSave = (imgUrl) => {
-      if (type === 'product') {
-        const name = document.getElementById('itemName').value.trim();
-        const fixedPrice = document.getElementById('fixedPrice').value.trim();
-        const flavoursStr = document.getElementById('itemFlavours').value.trim();
-        const flavours = flavoursStr ? flavoursStr.split(',').map(f => f.trim()).filter(f => f) : [];
-        const description = document.getElementById('itemDescription').value.trim();
-        const category = document.getElementById('itemCategory').value;
-        const rating = document.getElementById('itemRating').value.trim() || "5.0";
+    if (type === 'product') {
+      const name = document.getElementById('itemName').value.trim();
+      const fixedPrice = document.getElementById('fixedPrice').value.trim();
+      const flavoursRaw = document.getElementById('itemFlavours').value.trim();
+      const flavours = flavoursRaw ? flavoursRaw.split(',').map(f => f.trim()).filter(f => f.length > 0) : [];
+      const description = document.getElementById('itemDescription').value.trim();
+      const category = document.getElementById('itemCategory').value;
+      const rating = document.getElementById('itemRating').value.trim() || "5.0";
 
-        const productObj = {
-          name,
-          fixedPrice,
-            rating,
-            likesCount: index > -1 ? products[index].likesCount : 0,
-            isLiked: index > -1 ? products[index].isLiked : false,
-            category,
-            theme: 'card-amber',
-            description,
-            flavours,
-            image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
+      const processSave = (imageUrl) => {
+        if (editIdx > -1) {
+          products[editIdx] = {
+            ...products[editIdx],
+            name, fixedPrice, flavours, description, category, rating,
+            image: imageUrl || products[editIdx].image
           };
-
-          if (index > -1) {
-            products[index] = productObj;
-          } else {
-            products.push(productObj);
-          }
         } else {
-          const catName = document.getElementById('catName').value.trim();
-          if (!catName) return;
-          const categoryObj = {
-            name: catName,
-            img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
-          };
-
-          if (index > -1) {
-            const oldName = categories[index].name;
-            categories[index] = categoryObj;
-            products.products?.forEach(p => {
-              if (p.category === oldName) p.category = catName;
-            });
-          } else {
-            categories.push(categoryObj);
-          }
+          products.push({
+            name, fixedPrice, flavours, description, category, rating,
+            theme: 'card-amber',
+            likesCount: 0,
+            isLiked: false,
+            image: imageUrl || DEFAULT_LOGO
+          });
         }
-
         saveDataLocally();
         closeModal();
-        renderCategories();
         renderProducts(document.getElementById('searchInput').value);
       };
 
-      if (imgFile) {
-        compressImage(imgFile, 400, 0.7, (compressedUrl) => {
-          handleDataSave(compressedUrl);
-        });
+      if (fileInput) {
+        compressImage(fileInput, 500, 0.7, processSave);
       } else {
-        handleSave(null);
-      }
-    });
-
-    function handleDataSave(imgUrl) {
-      const type = document.getElementById('editType').value;
-      const index = parseInt(document.getElementById('editIndex').value);
-      if (type === 'product') {
-        const name = document.getElementById('itemName').value.trim();
-        const fixedPrice = document.getElementById('fixedPrice').value.trim();
-        const flavoursStr = document.getElementById('itemFlavours').value.trim();
-        const flavours = flavoursStr ? flavoursStr.split(',').map(f => f.trim()).filter(f => f) : [];
-        const description = document.getElementById('itemDescription').value.trim();
-        const category = document.getElementById('itemCategory').value;
-        const rating = document.getElementById('itemRating').value.trim() || "5.0";
-
-        const productObj = {
-          name,
-          fixedPrice,
-          rating,
-          likesCount: index > -1 ? products[index].likesCount : 0,
-          isLiked: index > -1 ? products[index].isLiked : false,
-          category,
-          theme: 'card-amber',
-          description,
-          flavours,
-          image: imgUrl || (index > -1 ? products[index].image : "Popsi_HighRes.jpg")
-        };
-
-        if (index > -1) {
-          products[index] = productObj;
-        } else {
-          products.push(productObj);
-        }
-      } else {
-        const catName = document.getElementById('catName').value.trim();
-        if (!catName) return;
-        const categoryObj = {
-          name: catName,
-          img: imgUrl || (index > -1 ? categories[index].img : "Popsi_HighRes.jpg")
-        };
-
-        if (index > -1) {
-          const oldName = categories[index].name;
-          categories[index] = categoryObj;
-          products.forEach(p => {
-            if (p.category === oldName) p.category = catName;
-          });
-        } else {
-          categories.push(categoryObj);
-        }
+        const existingImg = editIdx > -1 ? products[editIdx].image : DEFAULT_LOGO;
+        processSave(existingImg);
       }
 
-      saveDataLocally();
-      closeModal();
-      renderCategories();
-      renderProducts(document.getElementById('searchInput').value);
+    } else {
+      const catName = document.getElementById('catName').value.trim();
+      if (!catName) {
+        alert("Please enter category name!");
+        return;
+      }
+
+      const processCatSave = (imageUrl) => {
+        categories.push({ name: catName, img: imageUrl || DEFAULT_LOGO });
+        saveDataLocally();
+        closeModal();
+        renderCategories();
+      };
+
+      if (fileInput) {
+        compressImage(fileInput, 300, 0.7, processCatSave);
+      } else {
+        processCatSave(DEFAULT_LOGO);
+      }
     }
+  });
 
-    // Initial Boot
-    loadShopTitle();
-    loadProfilePhoto();
-    loadCustomBg();
-    loadPaymentQrCode();
-    checkAuthState();
-  </script>
+  // Initial Boot
+  loadShopTitle();
+  loadProfilePhoto();
+  loadCustomBg();
+  loadPaymentQrCode();
+  checkAuthState();
+</script>
+
 </body>
 </html>
