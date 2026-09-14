@@ -1641,21 +1641,21 @@
         <div class="auth-input-group">
           <label>Full Name</label>
           <div class="input-wrapper">
-            <input type="text" id="authName" class="no-icon" placeholder="e.g. Sanket Bhoir">
+            <input type="text" id="authName" class="no-icon" placeholder="">
           </div>
         </div>
 
         <div class="auth-input-group">
           <label>Username</label>
           <div class="input-wrapper">
-            <input type="text" id="authUsername" class="no-icon" placeholder="e.g. sanket_waffle">
+            <input type="text" id="authUsername" class="no-icon" placeholder="">
           </div>
         </div>
 
         <div class="auth-input-group">
           <label>Email ID</label>
           <div class="input-wrapper">
-            <input type="email" id="authEmail" class="no-icon" placeholder="e.g. vjsanket@gmail.com">
+            <input type="email" id="authEmail" class="no-icon" placeholder="">
           </div>
         </div>
       </div>
@@ -1689,9 +1689,9 @@
 
       <div id="standardAuthFields" style="display:flex; flex-direction:column; gap:8px;">
         <div class="auth-input-group">
-          <label id="phoneEmailLabel">Username, Mobile or Email</label>
+          <label id="phoneEmailLabel">Mobile Number</label>
           <div class="input-wrapper">
-            <input type="text" id="authPhone" class="no-icon" placeholder="Enter username, phone or email" required>
+            <input type="text" id="authPhone" class="no-icon" placeholder="Enter mobile number or username" required>
           </div>
         </div>
 
@@ -1703,8 +1703,8 @@
           </div>
         </div>
 
-        <label class="auth-checkbox-row">
-          <input type="checkbox" id="rememberMeCheckbox" checked>
+        <label class="auth-checkbox-row" id="rememberMeRow">
+          <input type="checkbox" id="rememberMeCheckbox">
           <span>Remember Me (Keep me logged in)</span>
         </label>
 
@@ -2229,24 +2229,12 @@
 
   function playOrderNotificationSound() {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-      
-      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-      
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
+      const bellAudio = new Audio('bell.mp3');
+      bellAudio.play().catch(e => {
+        console.log("Audio autoplay prevented or file not found:", e);
+      });
     } catch(e) {
-      console.log("Audio context prevented.");
+      console.log("Audio play error:", e);
     }
   }
 
@@ -2292,7 +2280,7 @@
         localStorage.setItem('paras_categories', JSON.stringify(categories));
       }
       if (data.products) {
-        products = data.products.map(p => ({ ...p, theme: 'card-amber' }));
+        products = data.products.map(p => ({ ...p, theme: ' card-amber', likesCount: p.likesCount !== undefined ? p.likesCount : 0 }));
         localStorage.setItem('paras_products', JSON.stringify(products));
       }
       renderCategories();
@@ -2335,7 +2323,7 @@
       name: "BOWL CAKE",
       fixedPrice: "299",
       rating: "5.0",
-      likesCount: 31,
+      likesCount: 0,
       isLiked: false,
       category: "All",
       theme: "card-amber",
@@ -2365,7 +2353,7 @@
       name: "PAN CAKES",
       fixedPrice: "149",
       rating: "5.0",
-      likesCount: 24,
+      likesCount: 0,
       isLiked: false,
       category: "All",
       theme: "card-amber",
@@ -2395,7 +2383,7 @@
       name: "SANDWICH",
       fixedPrice: "99",
       rating: "5.0",
-      likesCount: 19,
+      likesCount: 0,
       isLiked: false,
       category: "All",
       theme: "card-amber",
@@ -2423,7 +2411,7 @@
       name: "CANDY",
       fixedPrice: "99",
       rating: "5.0",
-      likesCount: 8,
+      likesCount: 0,
       isLiked: false,
       category: "All",
       theme: "card-amber",
@@ -2451,7 +2439,7 @@
       name: "POPSI",
       fixedPrice: "99",
       rating: "5.0",
-      likesCount: 12,
+      likesCount: 0,
       isLiked: false,
       category: "All",
       theme: "card-amber",
@@ -2480,7 +2468,7 @@
   ];
 
   let categories = JSON.parse(localStorage.getItem('paras_categories')) || defaultCategories;
-  let products = (JSON.parse(localStorage.getItem('paras_products')) || defaultProducts).map(p => ({ ...p, theme: 'card-amber' }));
+  let products = (JSON.parse(localStorage.getItem('paras_products')) || defaultProducts).map(p => ({ ...p, theme: 'card-amber', likesCount: p.likesCount !== undefined ? p.likesCount : 0 }));
   
   let galleryQueue = JSON.parse(localStorage.getItem('paras_gallery_queue')) || [
     {
@@ -2589,6 +2577,8 @@
           document.getElementById('authPassword').value = parsed.password || '';
           document.getElementById('rememberMeCheckbox').checked = true;
         } catch(e) {}
+      } else {
+        document.getElementById('rememberMeCheckbox').checked = false;
       }
     }
   }
@@ -2618,6 +2608,7 @@
     const forgotStep2 = document.getElementById('forgotStep2');
     const loginFieldLabel = document.getElementById('phoneEmailLabel');
     const forgotLink = document.getElementById('forgotPasswordLink');
+    const rememberMeRow = document.getElementById('rememberMeRow');
 
     signupFields.style.display = 'none';
     standardFields.style.display = 'none';
@@ -2630,9 +2621,10 @@
       switchText.innerHTML = "Don't have an account? <b>Sign Up</b>";
       switchText.style.display = "block";
       standardFields.style.display = "flex";
-      loginFieldLabel.textContent = "Username, Mobile or Email";
-      document.getElementById('authPhone').placeholder = "Enter username, phone or email";
+      loginFieldLabel.textContent = "Mobile Number";
+      document.getElementById('authPhone').placeholder = "Enter mobile number or username";
       forgotLink.style.display = "block";
+      rememberMeRow.style.display = "flex";
     } else if (mode === 'signup') {
       subtitle.textContent = "Create a new customer account";
       submitBtn.textContent = "Sign Up";
@@ -2640,20 +2632,23 @@
       switchText.style.display = "block";
       signupFields.style.display = "flex";
       standardFields.style.display = "flex";
-      loginFieldLabel.textContent = "Mobile Number or Username";
-      document.getElementById('authPhone').placeholder = "e.g. sanket_waffle or 9821298342";
+      loginFieldLabel.textContent = "Mobile Number";
+      document.getElementById('authPhone').placeholder = "Enter mobile number";
       forgotLink.style.display = "none";
+      rememberMeRow.style.display = "none";
     } else if (mode === 'forgot1') {
       subtitle.textContent = "Password Recovery - Step 1";
       switchText.innerHTML = "Remember password? <b>Login</b>";
       switchText.style.display = "block";
       forgotStep1.style.display = "flex";
       forgotLink.style.display = "none";
+      rememberMeRow.style.display = "none";
     } else if (mode === 'forgot2') {
       subtitle.textContent = "Enter OTP & New Password - Step 2";
       switchText.style.display = "none";
       forgotStep2.style.display = "flex";
       forgotLink.style.display = "none";
+      rememberMeRow.style.display = "none";
     }
   }
 
@@ -4304,7 +4299,7 @@
         saveDataLocally();
         closeModal();
         renderCategories();
-        renderProducts(document.getElementById('searchInput'.value));
+        renderProducts(document.getElementById('searchInput').value);
       };
 
       if (imgFile) {
@@ -4368,7 +4363,7 @@
       saveDataLocally();
       closeModal();
       renderCategories();
-      renderProducts(document.getElementById('searchInput'.value));
+      renderProducts(document.getElementById('searchInput').value);
     }
 
     // Initial Boot
