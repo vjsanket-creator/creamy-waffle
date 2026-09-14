@@ -1703,8 +1703,8 @@
           </div>
         </div>
 
-        <label class="auth-checkbox-row" id="rememberMeRow" style="display:none;">
-          <input type="checkbox" id="rememberMeCheckbox">
+        <label class="auth-checkbox-row" id="rememberMeRow">
+          <input type="checkbox" id="rememberMeCheckbox" checked>
           <span>Remember Me (Keep me logged in)</span>
         </label>
 
@@ -2262,14 +2262,25 @@
     if (adminSalesOverlay.classList.contains('active')) renderAdminSales();
   });
 
-  // REAL-TIME CLOUD LISTENER FOR USERS / CUSTOMERS (SYNCED ACROSS ALL DEVICES)
+  // REAL-TIME CLOUD LISTENER FOR USERS / CUSTOMERS WITH LOCAL FALLBACK MIGRATION
   db.collection("users").onSnapshot((snapshot) => {
     let cloudUsers = [];
     snapshot.forEach((doc) => {
       cloudUsers.push(doc.data());
     });
     
-    // Ensure admin account always exists
+    // Check if cloud is empty or missing admin, fallback / migrate from localStorage if present
+    let localSavedUsers = JSON.parse(localStorage.getItem('paras_users')) || [];
+    
+    if (cloudUsers.length === 0 && localSavedUsers.length > 0) {
+      // Migrate local users to cloud automatically
+      localSavedUsers.forEach(u => {
+        let docKey = (u.username || u.phone || u.email || '').replace(/[\/]/g, '_');
+        if (docKey) db.collection("users").doc(docKey).set(u);
+      });
+      cloudUsers = localSavedUsers;
+    }
+
     let hasAdmin = cloudUsers.some(u => u.role === 'admin');
     if (!hasAdmin) {
       let defaultAdmin = { name: "Admin Shopkeeper", username: "admin", phone: "9999999999", email: "admin@creamywaffle.com", pass: "admin123", role: "admin" };
@@ -2553,6 +2564,18 @@
   const feedbackModalOverlay = document.getElementById('feedbackModalOverlay');
   const authOverlay = document.getElementById('authOverlay');
 
+  // Pre-fill remembered login if exists
+  window.addEventListener('DOMContentLoaded', () => {
+    const rememberedId = localStorage.getItem('paras_remember_id');
+    const rememberedPass = localStorage.getItem('paras_remember_pass');
+    if (rememberedId && rememberedPass) {
+      document.getElementById('authPhone').value = rememberedId;
+      document.getElementById('authPassword').value = rememberedPass;
+      const remBox = document.getElementById('rememberMeCheckbox');
+      if (remBox) remBox.checked = true;
+    }
+  });
+
   function checkAuthState() {
     if (currentUser) {
       authOverlay.classList.add('hidden');
@@ -2619,7 +2642,7 @@
       loginFieldLabel.textContent = "Mobile Number or Username";
       document.getElementById('authPhone').placeholder = "Enter mobile number or username";
       forgotLink.style.display = "block";
-      rememberMeRow.style.display = "none";
+      rememberMeRow.style.display = "flex";
     } else if (mode === 'signup') {
       subtitle.textContent = "Create a new customer account";
       submitBtn.textContent = "Sign Up";
@@ -2724,6 +2747,16 @@
       localStorage.setItem('paras_current_user', JSON.stringify(currentUser));
       alert("🎉 Account created successfully!");
     } else {
+      // Remember me handling
+      const rememberChecked = document.getElementById('rememberMeCheckbox').checked;
+      if (rememberChecked) {
+        localStorage.setItem('paras_remember_id', identifier);
+        localStorage.setItem('paras_remember_pass', pass);
+      } else {
+        localStorage.removeItem('paras_remember_id');
+        localStorage.removeItem('paras_remember_pass');
+      }
+
       if ((identifier === 'admin' || identifier === 'admin@creamywaffle.com' || identifier === '9999999999') && pass === 'admin123') {
         let adminUser = registeredUsers.find(u => u.role === 'admin');
         if (!adminUser) {
